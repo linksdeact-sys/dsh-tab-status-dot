@@ -1,0 +1,42 @@
+{
+  "name": "@pxy/dsh-tab-status-dot",
+  "description": "DeepSeek Harness web client plugin: a browser-tab favicon status dot that turns light green when a session finished while you were away and light blue while a session awaits your choice.",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "test": "node test/core.test.mjs"
+  },
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "plugin",
+    "client-plugin",
+    "favicon",
+    "status-dot",
+    "notification"
+  ],
+  "license": "MIT",
+  "files": [
+    "lib/index.js",
+    "lib/client.js"
+  ]
+}

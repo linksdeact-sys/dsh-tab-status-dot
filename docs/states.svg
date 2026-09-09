@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 92" font-family="system-ui, sans-serif">
+  <text x="12" y="20" font-size="13" fill="#475569">Favicon states (16×16, shown enlarged):</text>
+
+  <g transform="translate(24, 34)">
+    <rect width="64" height="64" rx="6" fill="#eef2f7"/>
+    <circle cx="32" cy="32" r="11.8" fill="#64748b"/>
+    <text x="32" y="84" font-size="11" fill="#475569" text-anchor="middle">Neutral</text>
+  </g>
+  <g transform="translate(116, 34)">
+    <rect width="64" height="64" rx="6" fill="#eef2f7"/>
+    <circle cx="32" cy="32" r="12.4" fill="#4ade80" stroke="#22c55e" stroke-width="3.4"/>
+    <text x="32" y="84" font-size="11" fill="#475569" text-anchor="middle">Done unviewed</text>
+  </g>
+  <g transform="translate(208, 34)">
+    <rect width="64" height="64" rx="6" fill="#eef2f7"/>
+    <circle cx="32" cy="32" r="12.4" fill="#60a5fa" stroke="#3b82f6" stroke-width="3.4"/>
+    <text x="32" y="84" font-size="11" fill="#475569" text-anchor="middle">Awaiting choice</text>
+  </g>
+  <g transform="translate(300, 34)">
+    <rect width="64" height="64" rx="6" fill="#eef2f7"/>
+    <circle cx="22" cy="32" r="8.7" fill="#4ade80" stroke="#22c55e" stroke-width="3"/>
+    <circle cx="42" cy="32" r="8.7" fill="#60a5fa" stroke="#3b82f6" stroke-width="3"/>
+    <text x="32" y="84" font-size="11" fill="#475569" text-anchor="middle">Both</text>
+  </g>
+</svg>
