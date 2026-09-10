@@ -46,34 +46,93 @@ DeepSeek Harness Web GUI 的浏览器侧小插件：用**浏览器标签页图�
 
 - DeepSeek Harness 且使用 `web` profile；任意现代浏览器。
 
-## 安装（DeepSeek Harness web profile）
+## 安装
 
-Profile 目录：`%DSH_HOME%/profiles/web`（例如 `C:\Users\<你>\.dsh\profiles\web`）。
+### DeepSeek Harness 的插件是怎么部署的
 
-1. 把本包复制进 profile 的模块树：
+每个 DSH 界面都是一个 *profile* 目录（`$DSH_HOME/profiles/<名称>`，例如 `~/.dsh/profiles/web`）。插件只需满足两件事：
 
-   ```
-   <profile>/node_modules/@pxy/dsh-tab-status-dot/
-   ├── package.json
-   └── lib/
-       ├── index.js
-       └── client.js
-   ```
+1. **包能被该 profile 解析到** —— 即位于 `<profile>/node_modules/<包名>`（pnpm 会装到这里，直接复制文件同样有效）；
+2. **该 profile 注册了对应的 loader 行** —— 在 `<profile>/cordis.patch.yml` 里加一条 `insert`，写上包名。
 
-   （无需 pnpm/npm 安装：loader 会从 profile 自身的 `node_modules` 解析包。）
+之后运行中的实例会热重载用户 patch（约 1 秒）并提供客户端 bundle，你刷新页面即可。因此下面三种方式本质等价，区别只在“包怎么进 `node_modules`”。
 
-2. 在 `<profile>/cordis.patch.yml`（用户 patch 层）末尾追加：
+### 方式一：安装脚本（推荐）
 
-   ```yaml
-   - insert:
-       - id: tab-status-dot
-         name: '@pxy/dsh-tab-status-dot'
-   ```
+```powershell
+# Windows（PowerShell）
+git clone https://github.com/linksdeact-sys/dsh-tab-status-dot.git
+cd dsh-tab-status-dot
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
 
-3. 运行中的实例会热重载用户 patch（约 1 秒）并提供新的客户端 bundle；**刷新浏览器页面**即可
-   （若旧 bundle 有缓存请硬刷新）。若你的实例不热重载 patch，则重启一次 `dsh web`。
+```sh
+# macOS / Linux
+git clone https://github.com/linksdeact-sys/dsh-tab-status-dot.git
+cd dsh-tab-status-dot
+./install.sh
+```
 
-详见 [`INSTALL.md`](INSTALL.md) 的操作细节与排错。
+脚本会把包复制进 `web` profile、把注册块追加到 `cordis.patch.yml`（可重复执行、自动留 `.bak` 备份），并打印后续步骤。
+可选参数：`-Profile <名称>` / `--profile <名称>`、`-DshHome <路径>` / `--dsh-home <路径>`、`--uninstall`。
+
+### 方式二：包管理器（`dsh plugin`）
+
+如果环境里有 pnpm，官方路线可直接从 GitHub 装进 profile：
+
+```sh
+dsh plugin --profile web add github:linksdeact-sys/dsh-tab-status-dot
+```
+
+然后在 `~/.dsh/profiles/web/cordis.patch.yml` 追加注册行：
+
+```yaml
+# >>> dsh-tab-status-dot >>>
+- insert:
+    - id: tab-status-dot
+      name: '@pxy/dsh-tab-status-dot'
+# <<< dsh-tab-status-dot <<<
+```
+
+### 方式三：手动复制
+
+下载 Release 里的 zip（或从 clone 复制）使 profile 目录变为：
+
+```
+<profile>/node_modules/@pxy/dsh-tab-status-dot/
+├── package.json
+└── lib/
+    ├── index.js
+    └── client.js
+```
+
+并把方式二里相同的 `insert` 块加进 `<profile>/cordis.patch.yml`。
+
+### 验证
+
+1. 刷新 Harness 页面（若旧 bundle 有缓存请 `Ctrl+F5` 硬刷新）；
+2. 标签图标显示中性点。发一个任务后切去别的页面：它在你不在时跑完 → 变**淡绿**；有提问/审批等你处理 → 变**浅蓝**；
+3. 可选的服务端自检：`GET http://127.0.0.1:3080/plugins/@pxy/dsh-tab-status-dot/client.js` 返回 `200`。
+
+### 卸载
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall   # Windows
+./install.sh --uninstall                                           # macOS / Linux
+```
+
+或手动删除 `<profile>/node_modules/@pxy/dsh-tab-status-dot` 与 `cordis.patch.yml` 里的 `insert` 块。
+
+### 排错
+
+| 现象 | 处理 |
+|---|---|
+| 刷新后毫无变化 | 确认 `cordis.patch.yml` 里的 `insert` 行包名完全正确，然后硬刷新；若实例不热重载 patch，重启一次 `dsh web`。 |
+| `GET /plugins/.../client.js` 返回 404 | 运行实例没有注册该行（patch 未应用），或包不在 profile 的 `node_modules` 里。 |
+| `dsh plugin … add` 失败 | 环境缺 pnpm —— 改用方式一或方式三，两者都不需要包管理器。 |
+| 装上后页面异常 | 从 `cordis.patch.yml` 移除该行（或跑卸载脚本）再刷新：插件会完整卸载，包括它接管的 favicon。 |
+
+详见 [`INSTALL.md`](INSTALL.md) 的逐步操作与排错记录。
 
 ## 开发
 

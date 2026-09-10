@@ -1,5 +1,9 @@
 # 安装到运行中的 dsh web（免重启方案）
 
+> **一键安装**：克隆本仓库后直接运行 `install.ps1`（Windows）或 `install.sh`（macOS/Linux），
+> 它会自动完成下面「步骤 1 + 步骤 2」并保留 `.bak` 备份；`--uninstall` 可一键卸载。
+> 本文保留逐步手动操作，便于理解原理与排错。
+
 运行中的 web profile 位于 `%DSH_HOME%\profiles\web`（本例 `C:\Users\pxy\.dsh\profiles\web`）。
 profile 的用户 patch 层 `cordis.patch.yml` 会被运行中的实例**热重载**（`watchUserPatches`），
 loader 的 `baseUrl` 就是 profile 目录，模块解析会先查 profile 自己的 `node_modules` ——
@@ -43,13 +47,24 @@ loader 按 Node 解析规则在 profile 目录的 node_modules 找到它）。
 
 - 服务端已生效：`GET /plugins/@pxy/dsh-tab-status-dot/client.js` 返回 200（内容是插件 bundle）；
   主页 HTML 的 `window.__DSH_BOOT__` 里包含 `@pxy/dsh-tab-status-dot`。
-- 浏览器端：页面刷新后标签页标题前出现圆点；跑一个会话、任务完成后圆点变绿，
-  点进该会话查看后变白；多任务同理需逐个查看。
+- 浏览器端：刷新后标签**图标**显示中性圆点；会话在你不在看时跑完 → **淡绿**；
+  有提问/审批等你处理 → **浅蓝**（作答后消失）；两者并存 → 图标里两个浅色点。
+  绿点在你点开该会话查看后清除；若它本来就是打开的会话，回到页面约 1 秒即视为已读。
 
 ## 迭代改动
 
 修改 `lib/client.js` 后，只要再刷新页面即可（`/plugins/...` 以 no-cache 提供）。
-如需彻底卸载：从 `cordis.patch.yml` 删除 insert 行（热重载自动移除），
+
+## 卸载
+
+一键卸载（会同时移除 `cordis.patch.yml` 中的注册块，并留 `.bak` 备份）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall   # Windows
+./install.sh --uninstall                                           # macOS / Linux
+```
+
+手动卸载：从 `cordis.patch.yml` 删除 insert 行（热重载自动移除该插件），
 再删除 `node_modules\@pxy\dsh-tab-status-dot` 目录即可。
 
 ## 备注

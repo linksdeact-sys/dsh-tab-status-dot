@@ -42,33 +42,93 @@ The runtime's built-in model treats "session selected" as "viewed" — so a task
 
 - DeepSeek Harness with a `web` profile (see the runtime's profile/plugin conventions), any modern browser.
 
-## Install (DeepSeek Harness web profile)
+## Installation
 
-The profile lives at `%DSH_HOME%/profiles/web` (e.g. `C:\Users\<you>\.dsh\profiles\web`).
+### How plugin deployment works in DeepSeek Harness
 
-1. Copy this package into the profile's module tree:
+Every DSH surface is a *profile* directory (`$DSH_HOME/profiles/<name>`, e.g. `~/.dsh/profiles/web`). A plugin only has to satisfy two things:
 
-   ```
-   <profile>/node_modules/@pxy/dsh-tab-status-dot/
-   ├── package.json
-   └── lib/
-       ├── index.js
-       └── client.js
-   ```
+1. **the package is resolvable from the profile** — i.e. it lives in `<profile>/node_modules/<package-name>` (pnpm installs there, but a plain copy works just as well);
+2. **the profile registers a loader row for it** — one `insert` entry in `<profile>/cordis.patch.yml` naming the package.
 
-   (No pnpm/npm install needed: the loader resolves packages from the profile directory's own `node_modules`.)
+After that the running instance hot-reloads user patches (~1 s) and serves the client bundle; you just refresh the page. The three methods below are therefore equivalent — they differ only in how the package reaches `node_modules`.
 
-2. Append an entry to `<profile>/cordis.patch.yml` (the user patch layer):
+### Method 1 — install script (recommended)
 
-   ```yaml
-   - insert:
-       - id: tab-status-dot
-         name: '@pxy/dsh-tab-status-dot'
-   ```
+```powershell
+# Windows (PowerShell)
+git clone https://github.com/linksdeact-sys/dsh-tab-status-dot.git
+cd dsh-tab-status-dot
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
 
-3. The running instance hot-reloads user patches (~1 s) and serves the new client bundle; **refresh the browser page** (hard refresh if the old bundle was cached). If your instance does not hot-reload patches, restart `dsh web` once.
+```sh
+# macOS / Linux
+git clone https://github.com/linksdeact-sys/dsh-tab-status-dot.git
+cd dsh-tab-status-dot
+./install.sh
+```
 
-See [`INSTALL.md`](INSTALL.md) for details and troubleshooting.
+The script copies the package into the `web` profile, appends the registration block to `cordis.patch.yml` (idempotent, keeps a `.bak` backup), and prints the next steps.
+Options: `-Profile <name>` / `--profile <name>`, `-DshHome <path>` / `--dsh-home <path>`, `--uninstall`.
+
+### Method 2 — package manager (`dsh plugin`)
+
+If pnpm is available, the official route installs straight from GitHub into the profile:
+
+```sh
+dsh plugin --profile web add github:linksdeact-sys/dsh-tab-status-dot
+```
+
+…then register the row by appending this to `~/.dsh/profiles/web/cordis.patch.yml`:
+
+```yaml
+# >>> dsh-tab-status-dot >>>
+- insert:
+    - id: tab-status-dot
+      name: '@pxy/dsh-tab-status-dot'
+# <<< dsh-tab-status-dot <<<
+```
+
+### Method 3 — manual copy
+
+Download the release zip (or copy from a clone) so the profile ends up with:
+
+```
+<profile>/node_modules/@pxy/dsh-tab-status-dot/
+├── package.json
+└── lib/
+    ├── index.js
+    └── client.js
+```
+
+and add the same `insert` block shown in Method 2 to `<profile>/cordis.patch.yml`.
+
+### Verify
+
+1. Refresh the Harness page — hard refresh (`Ctrl+F5`) if the old bundle was cached.
+2. The tab icon shows a neutral dot. Start a task and switch to another page: when it finishes while you are away the dot turns **light green**; a question/approval waiting for you turns it **light blue**.
+3. Optional server-side check: `GET http://127.0.0.1:3080/plugins/@pxy/dsh-tab-status-dot/client.js` returns `200`.
+
+### Uninstall
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall   # Windows
+./install.sh --uninstall                                           # macOS / Linux
+```
+
+or delete `<profile>/node_modules/@pxy/dsh-tab-status-dot` and the `insert` block by hand.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Nothing appears after refresh | Make sure `cordis.patch.yml` holds the `insert` row with the exact package name, then hard-refresh; if your instance does not hot-reload patches, restart `dsh web` once. |
+| `GET /plugins/.../client.js` returns 404 | The row is not registered in the running instance (patch layer not applied), or the package is not in the profile's `node_modules`. |
+| `dsh plugin … add` fails | pnpm is missing/unavailable — use Method 1 or 3; neither needs a package manager. |
+| Page looks broken after installing | Remove the row from `cordis.patch.yml` (or run the uninstaller) and refresh: the plugin unloads completely, including its favicon override. |
+
+See [`INSTALL.md`](INSTALL.md) for the original step-by-step notes and operational details.
 
 ## Development
 
