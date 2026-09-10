@@ -3,6 +3,23 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — 2026-02
+
+### Added
+
+- **Beginner-friendly installation guides** for Windows, **Linux** and macOS:
+  [`GETTING-STARTED.zh-CN.md`](GETTING-STARTED.zh-CN.md) and [`GETTING-STARTED.md`](GETTING-STARTED.md),
+  linked from both READMEs.
+
+### Fixed
+
+- `install.sh` is now more portable: no dependency on `dirname`/`sed`/`tail`/`wc`, and Windows-style
+  (`C:\...\install.sh`) invocations resolve the script directory correctly.
+- `install.ps1` no longer prints mojibake under Windows PowerShell 5.1 (ASCII-only console output), and its
+  `-Source` default resolves reliably when launched with `powershell -File`.
+- Both installers replace the shipped empty `[]` patch template instead of appending after it (appending
+  produced two YAML root nodes, which the loader rejects), and the uninstallers restore `[]`.
+
 ## [0.1.0] — 2026-02
 
 ### Added

@@ -4,6 +4,8 @@ A tiny browser-side plugin for the **DeepSeek Harness Web GUI** (`dsh web`) that
 
 No page-title text is modified — the indicator lives entirely in the tab icon (favicon), where size and colour are fully controllable.
 
+> **New to this?** Read the beginner-friendly **[Getting started](GETTING-STARTED.md)** ([中文版](GETTING-STARTED.zh-CN.md)) — step-by-step for Windows, Linux and macOS, no coding required.
+
 ![states](docs/states.svg)
 
 ## States

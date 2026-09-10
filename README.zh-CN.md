@@ -5,6 +5,9 @@ DeepSeek Harness Web GUI 的浏览器侧小插件：用**浏览器标签页图�
 
 不修改页面标题文字，指示全部放在标签图标里（那里的大小与颜色完全可控）。
 
+> **第一次用？** 看 **[新手上路（不用懂代码）](GETTING-STARTED.zh-CN.md)**（[English](GETTING-STARTED.md)）——
+> Windows / Linux / macOS 都有一步步的图文式命令，复制粘贴即可。
+
 ![states](docs/states.svg)
 
 ## 圆点含义
