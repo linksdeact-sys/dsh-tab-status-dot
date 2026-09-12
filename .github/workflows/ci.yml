@@ -166,3 +166,16 @@ jobs:
           powershell -ExecutionPolicy Bypass -File .\install.ps1 -DshHome $home2 -Uninstall
           if (Test-Path (Join-Path $home2 'profiles\web\node_modules\@pxy\dsh-tab-status-dot')) { throw 'package directory survived uninstall' }
           node -e "const fs=require('fs'),y=require('js-yaml');const d=y.load(fs.readFileSync(process.env.DSH_HOME+'/profiles/web/cordis.patch.yml','utf8'));if(!Array.isArray(d)||d.length!==0)throw new Error('expected an empty array after uninstall, got '+JSON.stringify(d));console.log('patch entries after uninstall:',d.length)"
+
+  # Third shell implementation: BusyBox `sh` (Alpine Linux), which is neither
+  # dash nor bash --posix. Run through Docker so the checkout step still uses
+  # the normal runner tooling.
+  installers-alpine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install.sh under BusyBox sh (Alpine container)
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD:/w" -w /w alpine:3.20 \
+            sh /w/.github/ci/alpine-installer-check.sh
