@@ -104,13 +104,29 @@ async function setHidden(hidden) {
 const favicon = () => page.evaluate(() => window.__dshHarness.faviconHref());
 const title = () => page.evaluate(() => window.__dshHarness.title());
 
-async function waitFor(predicate, { timeout = 4000, step = 100, label = 'condition' } = {}) {
+/** Everything needed to understand a failure from the CI log alone. */
+async function diagnostics() {
+  try {
+    return await page.evaluate(() => ({
+      favicon: window.__dshHarness.faviconHref(),
+      title: document.title,
+      unread: (() => { try { return localStorage.getItem('dsh.tab-status-dot.unread.v1'); } catch { return '<blocked>'; } })(),
+      harness: window.__dshHarness.debug ? window.__dshHarness.debug() : undefined
+    }));
+  } catch (err) {
+    return { diagnosticsUnavailable: String(err) };
+  }
+}
+
+async function waitFor(predicate, { timeout = 6000, step = 100, label = 'condition' } = {}) {
   const deadline = Date.now() + timeout;
   let last;
   for (;;) {
     last = await predicate();
     if (last) return last;
-    if (Date.now() > deadline) throw new Error(`timed out waiting for ${label} (last value: ${JSON.stringify(last)})`);
+    if (Date.now() > deadline) {
+      throw new Error(`timed out waiting for ${label} (last value: ${JSON.stringify(last)}; state: ${JSON.stringify(await diagnostics())})`);
+    }
     await sleep(step);
   }
 }

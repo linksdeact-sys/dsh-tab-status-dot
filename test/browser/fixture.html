@@ -92,6 +92,16 @@
       },
       /** Run the plugin's cleanup (fiber disposal). */
       dispose() { if (typeof disposer === 'function') disposer(); },
+      /** Data-source state, printed when a test assertion times out. */
+      debug: () => ({
+        phase: state.snapshot.phase,
+        current: state.snapshot.current,
+        sessions: Object.keys(state.snapshot.byId),
+        pendingSize: pendingSnapshot.size,
+        listSubscribers: listeners.length,
+        pendingSubscribers: pendingListeners.length,
+        hidden: document.hidden === true
+      }),
       faviconHref: () => {
         const link = document.getElementById('dsh-tab-status-dot-favicon');
         return link ? link.href : null;
