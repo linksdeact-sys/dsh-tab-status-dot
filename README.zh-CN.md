@@ -38,8 +38,10 @@ DeepSeek Harness Web GUI 的浏览器侧小插件：用**浏览器标签页图�
 
 - 注册为**双面 cordis 插件**（`dsh.client`, `platform: web`）：宿主半边 `lib/index.js` 是空 `apply`；浏览器半边
   （`exports["./client"]` → `lib/client.js`）是 module-loader 格式的 classic-script bundle。
-- 订阅共享客户端运行时的 `sessions` 服务（`ctx.get("sessions").list`）的可观察快照，内含每个会话的
-  `running`、`pendingInteraction`、`completed` 以及当前打开会话 `current`。
+- 订阅 **`sessions` 服务**（`ctx.get("sessions").list`）的可观察快照，内含每个会话的 `running`、`completed`
+  以及当前打开会话 `current`。
+- “等待操作”（蓝灯）取自运行时自己的数据源：**DSH 0.1.5-rc.1+** 用 `uiSession.pendingInteractions`
+  （可观察的 `Map<SessionId, 交互>`）；旧版则回退扫描会话摘要上的 `pendingInteraction` 字段。两条路径都支持。
 - 完成信号三重保险：运行时自带 `completed` 标志 + 插件自己的 `running→idle` 边沿检测 + “自上次可见观察以来页面曾被隐藏”标记
   ——即使浏览器对后台标签页做了计时节流、只能在你切回后才发现状态迁移，提醒也能正确点亮。
 - 后台适配：浏览器会挂起后台标签页的 `requestAnimationFrame`（和部分事件投递），因此插件还做了
@@ -48,6 +50,21 @@ DeepSeek Harness Web GUI 的浏览器侧小插件：用**浏览器标签页图�
   - `visibilitychange` / 窗口 `focus` 时立即刷新。
 - 渲染做了合帧与变更检查：每帧最多一次 DOM 写入；favicon 用“我们写入的原始字符串”比较（避免 data-URI 规范化导致反复重写）。
 - “接管”favicon（`<link rel=icon>`），避免浏览器选中原品牌图标；卸载时还原原图标。
+
+## 版本兼容
+
+| DSH 版本 | 状态 |
+|---|---|
+| 0.1.5-rc.1（当前） | 支持 —— 会话来自 `@deepseek-ai/dsh-api-session-controller`，“等待操作”来自 `uiSession.pendingInteractions`。 |
+| ≤ 0.1.0-rc.x | 支持 —— 会话来自当时的运行时，“等待操作”回退扫描会话摘要字段。 |
+
+插件**刻意不声明任何“包名注入边”**（`dsh.client.inject`），只声明它需要的**服务名**
+（`exports.inject = ["sessions"]`）。原因是包名会随 DSH 版本搬家（本次会话运行时就从
+`dsh-client-runtime` 换到了 `dsh-api-session-controller`），而**指向不存在包的注入边会让插件行永远无法实例化**
+—— 这正是这次“指示灯失效”的原因。等待服务名则在各版本间都稳定。
+
+> **安装或升级插件后请重启 `dsh web`**（并重新打开它打印的 URL）。客户端模块注册表会**按 specifier 缓存包元数据直到重启**，
+> 因此只刷新页面并不能让改动后的 `package.json` 生效。
 
 ## 环境要求
 

@@ -120,6 +120,20 @@ const fresh = (unreadIds = []) => ({ unread: new Set(unreadIds), prevRunning: ne
   assert.equal(JSON.stringify(b2), JSON.stringify({ green: false, blue: false }));
 }
 
+// 5b) On DSH 0.1.5+ the pending flag comes from the runtime observable
+//     (opts.hasPending) and the summary is then NOT scanned.
+{
+  const st = fresh();
+  const yes = recompute(st, snap({ a: S("a", false) }, undefined), { hasPending: true });
+  assert.equal(JSON.stringify(yes), JSON.stringify({ green: false, blue: true }));
+  const no = recompute(st, snap({ a: S("a", false) }, undefined), { hasPending: false });
+  assert.equal(JSON.stringify(no), JSON.stringify({ green: false, blue: false }));
+  // hasPending: false must win even if an old-style summary field is present
+  const staleSummary = S("a", false, "question");
+  const noStale = recompute(st, snap({ a: staleSummary }, undefined), { hasPending: false });
+  assert.equal(JSON.stringify(noStale), JSON.stringify({ green: false, blue: false }));
+}
+
 // 6) green + blue coexist as separate dots.
 {
   const st = fresh();

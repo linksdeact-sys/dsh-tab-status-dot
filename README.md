@@ -35,7 +35,8 @@ The runtime's built-in model treats "session selected" as "viewed" — so a task
 ## How it works
 
 - Registered as a **dual-face cordis plugin** (`dsh.client`, `platform: web`): the host half (`lib/index.js`) is an empty `apply`, the browser half (`exports["./client"]` → `lib/client.js`) is a classic-script module-loader bundle.
-- Subscribes to the shared client-runtime `sessions` service (`ctx.get("sessions").list`), an observable snapshot carrying per-session `running`, `pendingInteraction`, `completed` and the open-session `current` id.
+- Subscribes to the **`sessions`** service (`ctx.get("sessions").list`), an observable snapshot carrying per-session `running`, `completed` and the open-session `current` id.
+- Pending operator choices come from the runtime's own source: on **DSH 0.1.5-rc.1+** that is `uiSession.pendingInteractions` (an observable `Map<SessionId, interaction>`); on older versions the per-summary `pendingInteraction` field is scanned instead. Both paths are supported.
 - Completeness signals: the runtime's own `completed` flag **plus** our own `running→idle` edge detection **plus** a "page was hidden since last visible observation" flag — so reminders are armed even when the browser throttles background timers and the transition is only observed after you return.
 - Background resilience: browsers suspend `requestAnimationFrame` (and some event delivery) for hidden tabs, so the plugin also
   - polls the cheap cached snapshot every second,
@@ -43,6 +44,23 @@ The runtime's built-in model treats "session selected" as "viewed" — so a task
   - refreshes immediately on `visibilitychange` / window focus.
 - Rendering is coalesced & change-checked: at most one DOM write per frame, raw-string favicon comparison (never the normalized `.href` read-back), no writes when nothing changed.
 - Takes over the favicon (`<link rel=icon>`) so browsers do not pick a competing brand icon; the original icon is restored on unload.
+
+## Compatibility
+
+| DSH | Status |
+|---|---|
+| 0.1.5-rc.1 (current) | Supported — sessions from `@deepseek-ai/dsh-api-session-controller`, pending from `uiSession.pendingInteractions`. |
+| ≤ 0.1.0-rc.x | Supported — sessions from the then-current runtime, pending scanned from the session summary. |
+
+The plugin deliberately declares **no package-name inject edges** (`dsh.client.inject`), only the service
+name it needs (`exports.inject = ["sessions"]`). Package names move between DSH releases (the sessions
+runtime itself moved in 0.1.5-rc.1), and an edge naming a package that no longer exists silently prevents the
+row from ever materializing — which is exactly how the indicator went dark. Waiting on the service name is
+stable across versions.
+
+> **After installing or updating the plugin, restart `dsh web`** (and reopen the URL it prints). The client
+> module registry caches package metadata per specifier until restart, so a page refresh alone will not pick
+> up a changed `package.json`.
 
 ## Requirements
 

@@ -5,6 +5,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.3] — 2026-02
+
+### Fixed
+
+- **The plugin stopped working on DSH 0.1.5-rc.1** (indicator dead: no dot at all).
+  Two version-coupled assumptions were removed:
+  - `dsh.client.inject` named `@deepseek-ai/dsh-client-runtime`, a package that no longer exists
+    (the sessions runtime moved to `@deepseek-ai/dsh-api-session-controller`). A graph edge naming a
+    missing package keeps the row from **ever materializing**, so no code of ours ran. The package-name
+    edges are gone; the plugin now waits on the *service* name instead
+    (`exports.inject = ["sessions"]`), which is stable across both layouts.
+  - `SessionSummary.pendingInteraction` was removed from the session list in 0.1.5-rc.1; pending operator
+    interactions now live in the session UI service as `uiSession.pendingInteractions` (an observable
+    `Map<SessionId, interaction>`). The plugin subscribes to that source when it exists and keeps the
+    summary scan only as a fallback for older versions (`opts.hasPending === undefined`).
+
+### Notes
+
+- Because the client module registry caches package metadata per specifier **until restart**, applying this
+  version to an already-running instance needs a `dsh web` restart (a page refresh alone is not enough).
+
 ### Added
 
 - **Real-browser E2E test** (`test/browser.e2e.mjs` + `test/browser/fixture.html`, run by the new

@@ -21,6 +21,8 @@
     let captured = null;
     let disposer = null;
     const listeners = [];
+    const pendingListeners = [];
+    let pendingSnapshot = new Map();
     // Start in the runtime's pre-baseline state ('pending'): a real session
     // list store is empty-but-not-ready until the first list pull lands, and
     // the plugin deliberately does nothing (no pruning) until then.
@@ -47,8 +49,26 @@
       }
     };
 
+    // Mirrors current DSH (0.1.5-rc.1): pending operator interactions are a
+    // separate observable owned by the session UI service, not a summary field.
+    const pendingInteractions = {
+      getSnapshot: () => pendingSnapshot,
+      subscribe(fn) {
+        pendingListeners.push(fn);
+        return () => {
+          const i = pendingListeners.indexOf(fn);
+          if (i >= 0) pendingListeners.splice(i, 1);
+        };
+      }
+    };
+    const uiSession = { pendingInteractions };
+
     const ctx = {
-      get: (name) => (name === 'sessions' ? sessions : undefined),
+      get: (name) => {
+        if (name === 'sessions') return sessions;
+        if (name === 'uiSession') return uiSession;
+        return undefined;
+      },
       effect(fn) { disposer = fn(); return disposer; },
       on: () => () => {}
     };
@@ -56,6 +76,11 @@
     return {
       /** Simulate a list-store publish; the plugin re-reads the snapshot. */
       setSnapshot(next) { state.snapshot = next; notify(); },
+      /** Simulate the pending-interaction source publishing a new set. */
+      setPending(entries) {
+        pendingSnapshot = new Map(entries || []);
+        for (const fn of pendingListeners.slice()) fn();
+      },
       /** Load-time registration captured? (proves the bundle executed) */
       registered: () => captured !== null,
       registeredId: () => (captured ? captured.id : null),

@@ -85,6 +85,11 @@ async function publish(byId, current) {
   }, [byId, current ?? null]);
 }
 
+/** Simulate the runtime's pending-interaction source (DSH 0.1.5+ layout). */
+async function setPending(entries) {
+  await page.evaluate((e) => window.__dshHarness.setPending(e), entries);
+}
+
 async function setHidden(hidden) {
   await page.evaluate((h) => {
     if (window.__hiddenInstalled !== true) {
@@ -148,22 +153,27 @@ await waitFor(async () => expectsColor(await favicon(), NEUTRAL), { timeout: 500
 pass('returning to the page clears it automatically (read-dwell)');
 
 // ── 6. a waiting choice → light blue, cleared once answered ────────────────
-await publish({ a: { id: 'a', running: false, pendingInteraction: 'question' } }, 'a');
-await waitFor(async () => expectsColor(await favicon(), BLUE), { label: 'blue favicon' });
-pass('session waiting for a choice → light-blue dot');
+// Driven through the runtime's pending-interaction source (the DSH 0.1.5+
+// layout: `uiSession.pendingInteractions`), not a session-summary field.
 await publish({ a: { id: 'a', running: false } }, 'a');
+await setPending([['a', { key: 'q1', sessionId: 'a' }]]);
+await waitFor(async () => expectsColor(await favicon(), BLUE), { label: 'blue favicon' });
+pass('session waiting for a choice → light-blue dot (pending source)');
+await setPending([]);
 await waitFor(async () => expectsColor(await favicon(), NEUTRAL), { label: 'neutral after answering' });
 pass('answering the choice clears the blue dot');
 
 // ── 7. both conditions → two separate dots ─────────────────────────────────
-await publish({ b: { id: 'b', running: true }, c: { id: 'c', running: false, pendingInteraction: 'approval' } }, 'c');
-await publish({ b: { id: 'b', running: false }, c: { id: 'c', running: false, pendingInteraction: 'approval' } }, 'c');
+await setPending([['c', { key: 'q2', sessionId: 'c' }]]);
+await publish({ b: { id: 'b', running: true }, c: { id: 'c', running: false } }, 'c');
+await publish({ b: { id: 'b', running: false }, c: { id: 'c', running: false } }, 'c');
 const both = await waitFor(async () => {
   const href = await favicon();
   return expectsColor(href, GREEN) && expectsColor(href, BLUE) ? href : null;
 }, { label: 'two-dot favicon' });
 assert.ok(expectsColor(both, GREEN) && expectsColor(both, BLUE));
 pass('finished-unviewed + awaiting-choice → two separate dots');
+await setPending([]);
 
 // ── 8. unviewed completions survive a page reload (localStorage) ───────────
 await publish({ d: { id: 'd', running: true } }, 'c');
