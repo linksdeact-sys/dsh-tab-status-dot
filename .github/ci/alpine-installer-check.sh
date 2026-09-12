@@ -8,7 +8,9 @@ set -eu
 
 PROFILE='web'
 PKG_PATH='node_modules/@pxy/dsh-tab-status-dot'
+export DSH_HOME=/tmp/dsh-home
 PATCH="$DSH_HOME/profiles/$PROFILE/cordis.patch.yml"
+export PATCH_FILE="$PATCH"
 
 echo "== shell under test: $(readlink -f /bin/sh 2>/dev/null || echo /bin/sh)"
 busybox 2>/dev/null | head -n 1 || true
@@ -34,7 +36,6 @@ validate() {
 }
 
 export DSH_HOME=/tmp/dsh-home
-export PATCH_FILE="$PATCH"
 rm -rf "$DSH_HOME"
 mkdir -p "$DSH_HOME/profiles/$PROFILE"
 
