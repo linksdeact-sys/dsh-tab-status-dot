@@ -3,6 +3,28 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-02
+
+### Fixed
+
+- **Both installers could write an invalid `cordis.patch.yml`.** The profile template dsh ships is a
+  three-line comment header followed by a bare `[]` (and no trailing newline). The empty-list detection
+  only matched a file whose *entire* content was `[]`, so a normal fresh profile took the “append” path and
+  ended up with two YAML root nodes (`[]` plus the new sequence) — which the loader rejects and which would
+  break the profile. Both installers now look at the file's real entries (ignoring comments):
+  - no real entries → the file is rewritten with the original comment header preserved and the registration block;
+  - existing entries → the block is appended as before.
+- **Uninstall could leave a comments-only file** (no `[]`, i.e. not a valid patch list). It now restores the
+  comment header plus a real `[]` token.
+- Idempotency check is tighter (`id: tab-status-dot` instead of any occurrence of the string).
+- `install.sh`: dropped `cd --` (dash compatibility) on top of the earlier portability fixes.
+
+### Added
+
+- CI job **`installers-linux`** that runs `install.sh` on a real Linux runner (`ubuntu-latest`, where `sh` is
+  dash) against the exact shipped profile template, validates the resulting YAML with `js-yaml`, and checks the
+  idempotent, append and uninstall paths.
+
 ## [0.1.1] — 2026-02
 
 ### Added

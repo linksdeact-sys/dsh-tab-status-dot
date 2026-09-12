@@ -6,6 +6,7 @@ on:
   pull_request:
 
 jobs:
+  # Pure-logic + browser-sandbox tests (run on plain node, any OS).
   test:
     runs-on: ubuntu-latest
     steps:
@@ -15,3 +16,78 @@ jobs:
           node-version: '20'
       - name: Run plugin tests (pure core + browser-sandbox smoke)
         run: node test/core.test.mjs
+
+  # The Linux installer, exercised on a REAL Linux runner against a profile
+  # shaped exactly like the one dsh ships (comment header + bare `[]`, with no
+  # trailing newline) — the case that used to produce an invalid patch file.
+  installers-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Shell syntax check and line endings
+        run: |
+          set -euo pipefail
+          sh -n install.sh                      # ubuntu's `sh` is dash
+          if grep -q $'\r' install.sh; then
+            echo "install.sh contains CR characters (would break on Linux)"; exit 1
+          fi
+          chmod +x install.sh
+
+      - name: Install YAML validator
+        run: npm install --no-save --no-package-lock js-yaml
+
+      - name: Install into a profile shaped like the shipped template
+        run: |
+          set -euo pipefail
+          export DSH_HOME="$PWD/.ci-home"
+          mkdir -p "$DSH_HOME/profiles/web"
+          printf '# Your patch layer for this dsh profile, applied after every bundle layer:\n# a top-level YAML array of loader patch entries (id-targeted config\n# overrides, disables, and insert lists; `!!js` expressions allowed).\n[]' \
+            > "$DSH_HOME/profiles/web/cordis.patch.yml"
+          sh ./install.sh
+          test -f "$DSH_HOME/profiles/web/node_modules/@pxy/dsh-tab-status-dot/lib/client.js"
+          test -f "$DSH_HOME/profiles/web/node_modules/@pxy/dsh-tab-status-dot/package.json"
+          node -e "
+            const fs=require('fs'), y=require('js-yaml');
+            const d=y.load(fs.readFileSync(process.env.DSH_HOME+'/profiles/web/cordis.patch.yml','utf8'));
+            if(!Array.isArray(d)) throw new Error('patch file is not a top-level array');
+            if(!JSON.stringify(d).includes('tab-status-dot')) throw new Error('row missing');
+            console.log('patch entries after install:', d.length);
+          "
+
+      - name: Re-running is idempotent
+        run: |
+          set -euo pipefail
+          export DSH_HOME="$PWD/.ci-home"
+          sh ./install.sh | grep -q 'already registered'
+
+      - name: Appending to an existing patch list stays valid
+        run: |
+          set -euo pipefail
+          export DSH_HOME="$PWD/.ci-home"
+          sh ./install.sh --uninstall > /dev/null
+          printf "# header comment\n- id: someone-else\n  name: 'other-pkg'\n" \
+            > "$DSH_HOME/profiles/web/cordis.patch.yml"
+          sh ./install.sh > /dev/null
+          node -e "
+            const fs=require('fs'), y=require('js-yaml');
+            const d=y.load(fs.readFileSync(process.env.DSH_HOME+'/profiles/web/cordis.patch.yml','utf8'));
+            if(!Array.isArray(d) || d.length !== 2) throw new Error('expected 2 entries, got '+JSON.stringify(d));
+            console.log('patch entries after append:', d.length);
+          "
+
+      - name: Uninstall restores a valid empty patch list
+        run: |
+          set -euo pipefail
+          export DSH_HOME="$PWD/.ci-home"
+          sh ./install.sh --uninstall > /dev/null
+          test ! -d "$DSH_HOME/profiles/web/node_modules/@pxy/dsh-tab-status-dot"
+          node -e "
+            const fs=require('fs'), y=require('js-yaml');
+            const d=y.load(fs.readFileSync(process.env.DSH_HOME+'/profiles/web/cordis.patch.yml','utf8'));
+            if(!Array.isArray(d) || d.length !== 0) throw new Error('expected an empty array after uninstall');
+            console.log('patch entries after uninstall:', d.length);
+          "

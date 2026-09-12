@@ -82,6 +82,26 @@ if (-not (Test-Path -LiteralPath $profileDir)) {
 $patchPath = Join-Path $profileDir 'cordis.patch.yml'
 $destDir = Join-Path (Join-Path (Join-Path $profileDir 'node_modules') $ScopeLeaf) $PackageLeaf
 
+function Get-EntryText([string]$text) {
+    # Everything that is not a comment line or blank space — i.e. the actual
+    # YAML entries. A file whose entries collapse to '' or '[]' has no real
+    # patch entries, which matters when deciding how to write the file.
+    $lines = $text -split "`r?`n"
+    $kept = foreach ($line in $lines) {
+        $t = $line.Trim()
+        if ($t -ne '' -and -not $t.StartsWith('#')) { $t }
+    }
+    return (($kept -join '') -replace '\s', '')
+}
+
+function Get-CommentHeader([string]$text) {
+    $lines = $text -split "`r?`n"
+    $kept = foreach ($line in $lines) {
+        if ($line.TrimStart().StartsWith('#')) { $line.TrimEnd() }
+    }
+    return ($kept -join "`r`n")
+}
+
 # ── uninstall ────────────────────────────────────────────────────────────────
 if ($Uninstall) {
     Write-Step "Uninstalling $PackageName from profile '$Profile'"
@@ -102,7 +122,13 @@ if ($Uninstall) {
         $updated = [regex]::Replace($updated, $plain, '')
         if ($updated -ne $raw) {
             Copy-Item -LiteralPath $patchPath -Destination "$patchPath.bak" -Force
-            if ($updated.Trim() -eq '') { $updated = "[]`r`n" } # keep a valid empty patch list
+            $entryText = Get-EntryText $updated
+            if ($entryText -eq '' -or $entryText -eq '[]') {
+                # A comments-only file is not a valid patch list: keep the
+                # comment header but make sure a real `[]` token survives.
+                $comments = Get-CommentHeader $updated
+                $updated = if ($comments -ne '') { $comments + "`r`n`r`n[]`r`n" } else { "[]`r`n" }
+            }
             Set-Content -LiteralPath $patchPath -Value $updated -NoNewline
             Write-Ok "registration removed from $patchPath (backup: cordis.patch.yml.bak)"
         } else {
@@ -143,11 +169,14 @@ if ($patch -match [regex]::Escape($RowId)) {
     Write-Ok "already registered in cordis.patch.yml (id: $RowId)"
 } else {
     Copy-Item -LiteralPath $patchPath -Destination "$patchPath.bak" -Force
-    $trimmed = $patch.Trim()
-    if ($trimmed -eq '' -or $trimmed -eq '[]') {
-        # The shipped profile template is a bare `[]`; appending after it would
-        # produce two YAML root nodes (invalid). Replace it instead.
-        $new = $block + "`r`n"
+    # The template shipped by dsh is a comment header followed by a bare `[]`
+    # (and no trailing newline). Appending after that `[]` would produce TWO
+    # YAML root nodes, which the loader rejects — rewrite it in that case,
+    # keeping the original comment header.
+    $entryText = Get-EntryText $patch
+    if ($entryText -eq '' -or $entryText -eq '[]') {
+        $comments = Get-CommentHeader $patch
+        $new = if ($comments -ne '') { $comments + "`r`n`r`n" + $block + "`r`n" } else { $block + "`r`n" }
     } else {
         $new = $patch
         if (-not $new.EndsWith("`n")) { $new += "`r`n" }

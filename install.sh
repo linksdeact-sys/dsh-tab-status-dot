@@ -27,7 +27,7 @@ case "$SELF_NORM" in
   */*) SELF_DIR="${SELF_NORM%/*}" ;;
   *)   SELF_DIR='.' ;;
 esac
-SOURCE="$(CDPATH= cd -- "$SELF_DIR" && pwd)"
+SOURCE="$(CDPATH= cd "$SELF_DIR" && pwd)"
 
 PROFILE='web'
 DSH_HOME_DIR="${DSH_HOME:-$HOME/.dsh}"
@@ -92,8 +92,18 @@ if [ "$UNINSTALL" = 'yes' ]; then
         skip == 0 { print }
         index($0, e) { skip = 0 }
       ' "$PATCH_FILE.bak" > "$PATCH_FILE"
-      if [ -z "$(tr -d '[:space:]' < "$PATCH_FILE")" ]; then
-        printf '[]\n' > "$PATCH_FILE"   # keep a valid empty patch list
+      # A comments-only file is not a valid patch list, so make sure a real
+      # `[]` token survives (keeping the comment header).
+      ENTRIES="$(grep -v '^[[:space:]]*#' "$PATCH_FILE" 2>/dev/null | tr -d '[:space:]')"
+      if [ -z "$ENTRIES" ] || [ "$ENTRIES" = '[]' ]; then
+        TMP_FILE="$PATCH_FILE.new"
+        : > "$TMP_FILE"
+        if grep -q '^[[:space:]]*#' "$PATCH_FILE" 2>/dev/null; then
+          grep '^[[:space:]]*#' "$PATCH_FILE" >> "$TMP_FILE"
+          printf '\n' >> "$TMP_FILE"
+        fi
+        printf '[]\n' >> "$TMP_FILE"
+        mv "$TMP_FILE" "$PATCH_FILE"
       fi
       ok "registration removed from $PATCH_FILE (backup: cordis.patch.yml.bak)"
     else
@@ -124,17 +134,25 @@ if [ ! -f "$PATCH_FILE" ]; then
   warn "cordis.patch.yml missing; creating $PATCH_FILE"
   : > "$PATCH_FILE"
 fi
-if grep -q "$ROW_ID" "$PATCH_FILE" 2>/dev/null; then
+if grep -q "id: $ROW_ID" "$PATCH_FILE" 2>/dev/null; then
   ok "already registered in cordis.patch.yml (id: $ROW_ID)"
 else
   cp "$PATCH_FILE" "$PATCH_FILE.bak"
-  TRIM="$(tr -d '[:space:]' < "$PATCH_FILE")"
-  if [ -z "$TRIM" ] || [ "$TRIM" = '[]' ]; then
-    # The shipped profile template is a bare `[]`; appending after it would
-    # produce two YAML root nodes (invalid), so replace it entirely.
-    : > "$PATCH_FILE"
+  TMP_FILE="$PATCH_FILE.new"
+  # What does the file hold besides comments? The template shipped by dsh is
+  # three comment lines followed by a bare `[]` (with no trailing newline).
+  # Appending after that `[]` would produce TWO YAML root nodes, which the
+  # loader rejects — so that case rewrites the file, keeping the comments.
+  ENTRIES="$(grep -v '^[[:space:]]*#' "$PATCH_FILE" 2>/dev/null | tr -d '[:space:]')"
+  if [ -z "$ENTRIES" ] || [ "$ENTRIES" = '[]' ]; then
+    : > "$TMP_FILE"
+    if grep -q '^[[:space:]]*#' "$PATCH_FILE" 2>/dev/null; then
+      grep '^[[:space:]]*#' "$PATCH_FILE" >> "$TMP_FILE"
+      printf '\n' >> "$TMP_FILE"
+    fi
   else
-    printf '\n' >> "$PATCH_FILE"
+    cat "$PATCH_FILE" > "$TMP_FILE"
+    printf '\n' >> "$TMP_FILE"   # our block must start on a fresh line
   fi
   {
     printf '%s\n' "$START_MARKER"
@@ -144,7 +162,8 @@ else
     printf '%s\n' "    - id: $ROW_ID"
     printf '%s\n' "      name: '$PKG_NAME'"
     printf '%s\n' "$END_MARKER"
-  } >> "$PATCH_FILE"
+  } >> "$TMP_FILE"
+  mv "$TMP_FILE" "$PATCH_FILE"
   ok "registered row '$ROW_ID' in $PATCH_FILE (backup: cordis.patch.yml.bak)"
 fi
 
