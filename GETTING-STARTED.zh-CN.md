@@ -28,6 +28,20 @@
 装插件总共就两步：**① 把文件放到 Harness 的配置目录里；② 在配置文件里加一行登记。**
 下面各个系统的命令已经帮你把这两步合在一起做了。
 
+> ## ⚠️ 最重要的一条：装完要重启 Harness
+>
+> **装插件后（以及以后每次升级插件后），必须把 DeepSeek Harness 重启一次**，否则插件不会生效 ——
+> 只按 F5 刷新网页是不够的。原因是 Harness 会把插件的“登记信息”缓存起来，直到重启才会重新读取。
+>
+> 重启方法（很简单）：
+> 1. 关掉 DeepSeek Harness 的网页窗口；
+> 2. 在启动它的那个终端/命令行窗口里按 **Ctrl + C** 停掉；
+> 3. 用原来的方式**重新启动**它（和你平时启动 Harness 完全一样）；
+> 4. **打开它新打印出来的网址**（新版 Harness 会打印一个带认证的网址，必须用它打开，直接用旧网址会提示未授权）；
+> 5. 标签页图标上就会出现小圆点。
+>
+> 下面各系统的步骤里，最后一步指的就是这件事。
+
 ---
 
 ## 三、Linux 安装（Ubuntu / Debian / Fedora / Arch 都适用）
@@ -48,9 +62,9 @@ cd ~/Downloads
 #   Fedora:        sudo dnf install -y unzip
 #   Arch:          sudo pacman -S unzip
 curl -L -o dsh-tab-status-dot.zip \
-  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.2.zip
+  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.3.zip
 unzip -o dsh-tab-status-dot.zip
-cd dsh-tab-status-dot-0.1.2
+cd dsh-tab-status-dot-0.1.3
 ```
 
 **办法 B：用 git 克隆（电脑上已装 git 的话更省事）**
@@ -78,17 +92,17 @@ chmod +x install.sh      # 给它“可执行”权限，只需做一次
 1. 把插件复制到 `~/.dsh/profiles/web/node_modules/@pxy/dsh-tab-status-dot`；
 2. 在 `~/.dsh/profiles/web/cordis.patch.yml` 里加一行登记（并留一个 `.bak` 备份）。
 
-### 第 4 步：刷新网页
+### 第 4 步：重启 Harness 并打开新网址
 
-回到 DeepSeek Harness 的网页，按 **Ctrl + F5**（Firefox 用 **Ctrl + Shift + R**）刷新。
-标签上的小方块图标就会变成一个小圆点。
+看到带 `ok` 的提示后，按前面「⚠️ 最重要的一条」重启 DeepSeek Harness，并打开它新打印的网址。
+标签上的小图标就会变成一个小圆点（空闲时是中性色）。
 
 ### 常用参数
 
 ```bash
 ./install.sh --profile web            # 指定 profile（默认就是 web）
 ./install.sh --dsh-home /home/你/.dsh  # 配置目录不在默认位置时用
-./install.sh --uninstall              # 卸载（网页刷新后恢复原样）
+./install.sh --uninstall              # 卸载（重启后恢复原样）
 ./install.sh --help                   # 看所有参数
 ```
 
@@ -97,7 +111,7 @@ chmod +x install.sh      # 给它“可执行”权限，只需做一次
 ## 四、Windows 安装
 
 1. 打开 <https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest>，
-   在页面最下方 **Assets** 里下载 `dsh-tab-status-dot-0.1.2.zip`。
+   在页面最下方 **Assets** 里下载 `dsh-tab-status-dot-0.1.3.zip`。
 2. 右键压缩包 → **全部解压缩**。
 3. 进入解压出来的文件夹，在**空白处**右键：
    - Windows 11：选「**在终端中打开**」；
@@ -108,9 +122,9 @@ chmod +x install.sh      # 给它“可执行”权限，只需做一次
    powershell -ExecutionPolicy Bypass -File .\install.ps1
    ```
 
-5. 看到带 `ok` 的提示后，回到 Harness 网页按 **Ctrl + F5** 刷新。
+5. 看到带 `ok` 的提示后，**重启 DeepSeek Harness 并打开它新打印的网址**（见前面的「⚠️ 最重要的一条」）。
 
-卸载：把上面的命令末尾加上 ` -Uninstall` 再执行一次即可。
+卸载：把上面的命令末尾加上 ` -Uninstall` 再执行一次，然后同样重启一次 Harness。
 
 ---
 
@@ -122,34 +136,30 @@ chmod +x install.sh      # 给它“可执行”权限，只需做一次
    ```bash
    cd ~/Downloads
    curl -L -o dsh-tab-status-dot.zip \
-     https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.2.zip
+     https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.3.zip
    unzip -o dsh-tab-status-dot.zip
-   cd dsh-tab-status-dot-0.1.2
+   cd dsh-tab-status-dot-0.1.3
    chmod +x install.sh
    ./install.sh
    ```
 
-3. 回到 Harness 网页，按 **Cmd + Shift + R** 刷新。
+3. **重启 Harness 并打开它新打印的网址**（见前面的「⚠️ 最重要的一条」）。
 
-卸载：`./install.sh --uninstall`
+卸载：`./install.sh --uninstall`，然后同样重启一次 Harness。
 
 ---
 
 ## 六、怎么确认装好了
 
-刷新网页后：
+重启 Harness 并打开新网址后：
 
-1. **标签页最左边的小图标变成了一个小圆点**（平时是白/灰色）；
+1. **标签页最左边的小图标变成了一个小圆点**（空闲时是中性色）；
 2. 发一个任务，然后切去别的网页等它跑完，回来看到小点变**淡绿** —— 说明一切正常；
-3. 点开那个对话，绿点变回白色 —— 说明“已读”也正常。
+3. 点开那个对话，绿点变回中性 —— 说明“已读”也正常；
+4. 如果某次它弹出“请你选择”的问题，图标会变**浅蓝**，作答后才消失。
 
-更严格的检查（可选，终端里执行）：
-
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3080/plugins/@pxy/dsh-tab-status-dot/client.js
-```
-
-输出 `200` 表示服务端已经把这个插件提供出来了。
+> 说明：新版 Harness 的网页需要认证，直接访问 `http://127.0.0.1:3080/` 会返回 401；
+> 命令行自检也需要带认证 Cookie，所以最可靠的验证就是上面这几步“看图标”。
 
 ---
 
@@ -157,7 +167,8 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3080/plugins/@pxy/dsh-
 
 | 现象 | 怎么办 |
 |---|---|
-| 刷新后图标没变化 | 1) 确认 `~/.dsh/profiles/web/cordis.patch.yml` 里有 `tab-status-dot` 那几行；2) 把 DeepSeek Harness 完全关掉再重新打开；3) 再刷新网页。 |
+| 装完后图标没变化 | **先重启 Harness 并打开它新打印的网址**（只刷新页面不够，这是最常见的原因）；确认 `~/.dsh/profiles/web/cordis.patch.yml` 里有 `tab-status-dot` 那几行。 |
+| 打开旧网址提示未授权（401） | 新版 Harness 用带认证的网址：请用它启动时打印的那个 URL（含 token），不要用收藏夹里的旧地址。 |
 | 提示 `unzip: command not found` | 先装 unzip（见第 2 步注释里的命令）。 |
 | 提示 `Permission denied` | 先 `chmod +x install.sh`，或者用 `sh install.sh`。 |
 | 提示找不到 profile | 至少打开过一次 Harness 网页，或启动一次 `dsh --profile web --help`，然后再装。 |

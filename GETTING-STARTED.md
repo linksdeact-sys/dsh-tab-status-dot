@@ -28,6 +28,21 @@ Three things worth knowing:
 Installing = **① put the plugin files into the Harness config directory** and **② register one line in a config file**.
 The commands below do both for you.
 
+> ## ⚠️ The one thing people get wrong: restart Harness afterwards
+>
+> **After installing (and after every later upgrade of the plugin) you must restart DeepSeek Harness once** —
+> a page refresh alone is not enough. Harness caches the plugin registry information until it restarts.
+>
+> How to restart:
+> 1. Close the DeepSeek Harness browser window.
+> 2. In the terminal that runs it, press **Ctrl + C** to stop it.
+> 3. Start it again exactly the way you normally do.
+> 4. **Open the URL it prints this time** (current Harness prints an authenticated URL; opening the old
+>    address shows an "authentication required" error).
+> 5. The tab icon shows the status dot.
+>
+> The last step of each OS section below means exactly this.
+
 ---
 
 ## Linux (Ubuntu / Debian / Fedora / Arch …)
@@ -47,9 +62,9 @@ cd ~/Downloads
 #   Fedora:        sudo dnf install -y unzip
 #   Arch:          sudo pacman -S unzip
 curl -L -o dsh-tab-status-dot.zip \
-  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.2.zip
+  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.3.zip
 unzip -o dsh-tab-status-dot.zip
-cd dsh-tab-status-dot-0.1.2
+cd dsh-tab-status-dot-0.1.3
 ```
 
 **Option B — clone with git**
@@ -72,16 +87,17 @@ chmod +x install.sh      # once
 It copies the plugin into `~/.dsh/profiles/web/node_modules/@pxy/dsh-tab-status-dot` and appends a marked
 registration block to `~/.dsh/profiles/web/cordis.patch.yml` (keeping a `.bak` backup).
 
-### 4. Refresh the page
+### 4. Restart Harness and open the new URL
 
-Back in the Harness page press **Ctrl + F5** (Firefox: **Ctrl + Shift + R**). The tab icon becomes a dot.
+After the ok lines, restart DeepSeek Harness as described in the warning above and open the URL it prints.
+The tab icon becomes a small dot (neutral while idle).
 
 ### Useful flags
 
 ```bash
 ./install.sh --profile web             # target profile (default: web)
 ./install.sh --dsh-home /home/you/.dsh # custom Harness home
-./install.sh --uninstall               # remove everything (page returns to normal after refresh)
+./install.sh --uninstall               # remove everything (restart Harness afterwards)
 ./install.sh --help
 ```
 
@@ -90,7 +106,7 @@ Back in the Harness page press **Ctrl + F5** (Firefox: **Ctrl + Shift + R**). Th
 ## Windows
 
 1. Open <https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest> and download
-   `dsh-tab-status-dot-0.1.2.zip` from **Assets**.
+   `dsh-tab-status-dot-0.1.3.zip` from **Assets**.
 2. Right-click the zip → **Extract All**.
 3. In the extracted folder, right-click empty space → **Open in Terminal** (Windows 11) or
    **Open PowerShell window here** (Shift + right-click on Windows 10).
@@ -100,7 +116,7 @@ Back in the Harness page press **Ctrl + F5** (Firefox: **Ctrl + Shift + R**). Th
    powershell -ExecutionPolicy Bypass -File .\install.ps1
    ```
 
-5. Refresh the Harness page with **Ctrl + F5**.
+5. **Restart DeepSeek Harness and open the URL it prints** (see the warning above).
 
 Uninstall: run the same command with ` -Uninstall` appended.
 
@@ -111,14 +127,14 @@ Uninstall: run the same command with ` -Uninstall` appended.
 ```bash
 cd ~/Downloads
 curl -L -o dsh-tab-status-dot.zip \
-  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.2.zip
+  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.3.zip
 unzip -o dsh-tab-status-dot.zip
-cd dsh-tab-status-dot-0.1.2
+cd dsh-tab-status-dot-0.1.3
 chmod +x install.sh
 ./install.sh
 ```
 
-Then refresh the Harness page with **Cmd + Shift + R**. Uninstall with `./install.sh --uninstall`.
+Then **restart DeepSeek Harness and open the URL it prints**. Uninstall with `./install.sh --uninstall` (restart again afterwards).
 
 ---
 
@@ -127,14 +143,11 @@ Then refresh the Harness page with **Cmd + Shift + R**. Uninstall with `./instal
 1. The tab icon is now a small dot (neutral when idle).
 2. Start a task, switch to another page, let it finish: back in the Harness tab the dot is **light green**.
 3. Open that conversation: the dot returns to neutral.
+4. When a question waits for your choice, the dot is **light blue** and only clears once you answer.
 
-Optional server-side check:
-
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3080/plugins/@pxy/dsh-tab-status-dot/client.js
-```
-
-`200` means the running instance serves the plugin.
+> Current Harness serves its web surface behind cookie authentication, so a plain `curl` against
+> `http://127.0.0.1:3080/` (or the plugin endpoint) answers `401 authentication required`. Watching the icon
+> in the steps above is the reliable check.
 
 ---
 
@@ -142,7 +155,9 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3080/plugins/@pxy/dsh-
 
 | Symptom | Fix |
 |---|---|
-| Nothing changes after refresh | Check that `cordis.patch.yml` contains the `tab-status-dot` block; fully restart DeepSeek Harness; refresh again. |
+| Nothing changes after installing | **Restart DeepSeek Harness and open the URL it prints** — a page refresh is not enough (Harness caches plugin metadata until restart). Also check that `cordis.patch.yml` contains the `tab-status-dot` block. |
+| `401 authentication required` when opening the page | Use the authenticated URL Harness printed at startup (it contains a token), not an older bookmark. |
+| Page looks wrong after installing | `./install.sh --uninstall` (Windows: `-Uninstall`), restart Harness — everything is restored. |
 | `unzip: command not found` | Install unzip (see the note in step 2). |
 | `Permission denied` | `chmod +x install.sh`, or run `sh install.sh`. |
 | "Profile not found" | Open the Harness page once (or run `dsh --profile web --help`) and retry. |
