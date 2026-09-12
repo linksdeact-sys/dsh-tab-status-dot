@@ -55,6 +55,8 @@ Every DSH surface is a *profile* directory (`$DSH_HOME/profiles/<name>`, e.g. `~
 
 After that the running instance hot-reloads user patches (~1 s) and serves the client bundle; you just refresh the page. The three methods below are therefore equivalent — they differ only in how the package reaches `node_modules`.
 
+> **Verified installers.** CI exercises them on four real environments — `ubuntu-latest` (where `sh` is dash), `macos-latest` (BSD userland), Alpine/BusyBox `sh`, and `windows-latest` (Windows PowerShell 5.1). Each job installs into a profile shaped exactly like the shipped template (comment header + bare `[]`, no trailing newline), validates the resulting YAML with `js-yaml`, and checks the idempotent, append-to-existing-entries and uninstall paths.
+
 ### Method 1 — install script (recommended)
 
 ```powershell

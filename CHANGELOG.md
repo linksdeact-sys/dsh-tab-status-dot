@@ -3,6 +3,19 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **BusyBox `sh` (Alpine Linux) coverage** for the shell installer: a CI job runs
+  `.github/ci/alpine-installer-check.sh` inside an `alpine:3.20` container and checks install, idempotent
+  re-run, append-to-existing-entries, uninstall-keeps-others and uninstall-restores-template, validating the
+  resulting YAML with `js-yaml` at every step.
+
+The installers are now exercised in CI on **four** real environments:
+`ubuntu-latest` (`sh` = dash), `macos-latest` (BSD userland), Alpine/BusyBox `sh`, and
+`windows-latest` (Windows PowerShell 5.1).
+
 ## [0.1.2] — 2026-02
 
 ### Fixed

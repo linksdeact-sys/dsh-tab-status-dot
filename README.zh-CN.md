@@ -60,6 +60,8 @@ DeepSeek Harness Web GUI 的浏览器侧小插件：用**浏览器标签页图�
 
 之后运行中的实例会热重载用户 patch（约 1 秒）并提供客户端 bundle，你刷新页面即可。因此下面三种方式本质等价，区别只在“包怎么进 `node_modules`”。
 
+> **安装脚本已通过真机 CI 验证**：在 `ubuntu-latest`（`sh` 即 dash）、`macos-latest`（BSD 工具链）、Alpine/BusyBox `sh`、`windows-latest`（Windows PowerShell 5.1）四种真实环境中，均按“出厂模板形态（注释头 + 裸 `[]`、无行尾换行）”安装，并用 `js-yaml` 校验生成的配置，覆盖重复安装、追加已有条目、卸载等路径。
+
 ### 方式一：安装脚本（推荐）
 
 ```powershell
