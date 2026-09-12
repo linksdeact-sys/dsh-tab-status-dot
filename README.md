@@ -1,5 +1,9 @@
 # dsh-tab-status-dot
 
+[![test](https://github.com/linksdeact-sys/dsh-tab-status-dot/actions/workflows/ci.yml/badge.svg)](https://github.com/linksdeact-sys/dsh-tab-status-dot/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/linksdeact-sys/dsh-tab-status-dot)](https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest)
+[![license](https://img.shields.io/github/license/linksdeact-sys/dsh-tab-status-dot)](LICENSE)
+
 A tiny browser-side plugin for the **DeepSeek Harness Web GUI** (`dsh web`) that shows a **status dot as the browser-tab favicon**, telling you at a glance whether any conversation has finished while you were away, or is waiting for you to make a choice.
 
 No page-title text is modified — the indicator lives entirely in the tab icon (favicon), where size and colour are fully controllable.

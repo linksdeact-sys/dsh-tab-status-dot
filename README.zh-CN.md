@@ -1,5 +1,9 @@
 # dsh-tab-status-dot
 
+[![test](https://github.com/linksdeact-sys/dsh-tab-status-dot/actions/workflows/ci.yml/badge.svg)](https://github.com/linksdeact-sys/dsh-tab-status-dot/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/linksdeact-sys/dsh-tab-status-dot)](https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest)
+[![license](https://img.shields.io/github/license/linksdeact-sys/dsh-tab-status-dot)](LICENSE)
+
 DeepSeek Harness Web GUI 的浏览器侧小插件：用**浏览器标签页图标（favicon）里的状态圆点**，随时提醒你——
 “有会话跑完你没看”或“有会话在等你做选择”。
 
