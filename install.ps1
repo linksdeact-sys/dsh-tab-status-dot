@@ -68,7 +68,7 @@ function Write-Step($text) { Write-Host "==> $text" -ForegroundColor Cyan }
 function Write-Ok($text)   { Write-Host "  ok  $text" -ForegroundColor Green }
 function Write-Warn2($text) { Write-Host "  !   $text" -ForegroundColor Yellow }
 
-# ── resolve locations ────────────────────────────────────────────────────────
+# -- resolve locations --------------------------------------------------------
 if ([string]::IsNullOrWhiteSpace($DshHome)) {
     $DshHome = Join-Path $HOME '.dsh'
 }
@@ -83,7 +83,7 @@ $patchPath = Join-Path $profileDir 'cordis.patch.yml'
 $destDir = Join-Path (Join-Path (Join-Path $profileDir 'node_modules') $ScopeLeaf) $PackageLeaf
 
 function Get-EntryText([string]$text) {
-    # Everything that is not a comment line or blank space — i.e. the actual
+    # Everything that is not a comment line or blank space - i.e. the actual
     # YAML entries. A file whose entries collapse to '' or '[]' has no real
     # patch entries, which matters when deciding how to write the file.
     $lines = $text -split "`r?`n"
@@ -102,7 +102,7 @@ function Get-CommentHeader([string]$text) {
     return ($kept -join "`r`n")
 }
 
-# ── uninstall ────────────────────────────────────────────────────────────────
+# -- uninstall ----------------------------------------------------------------
 if ($Uninstall) {
     Write-Step "Uninstalling $PackageName from profile '$Profile'"
     if (Test-Path -LiteralPath $destDir) {
@@ -140,7 +140,7 @@ if ($Uninstall) {
     exit 0
 }
 
-# ── install: copy the package ────────────────────────────────────────────────
+# -- install: copy the package ------------------------------------------------
 $manifest = Join-Path $Source 'package.json'
 $libDir = Join-Path $Source 'lib'
 if (-not (Test-Path -LiteralPath $manifest)) { throw "package.json not found in $Source (pass -Source <path to the plugin folder>)" }
@@ -149,7 +149,7 @@ if (-not (Test-Path -LiteralPath $libDir)) { throw "lib/ not found in $Source" }
 Write-Step "Installing $PackageName into profile '$Profile'"
 if (Test-Path -LiteralPath $destDir) {
     if (-not $Force) {
-        Write-Warn2 "already present at $destDir — overwriting (use -Force to silence)"
+        Write-Warn2 "already present at $destDir - overwriting (use -Force to silence)"
     }
     Remove-Item -LiteralPath $destDir -Recurse -Force
 }
@@ -159,7 +159,7 @@ Copy-Item -LiteralPath (Join-Path $libDir 'index.js') -Destination (Join-Path $d
 Copy-Item -LiteralPath (Join-Path $libDir 'client.js') -Destination (Join-Path $destDir 'lib\client.js') -Force
 Write-Ok "package copied to $destDir"
 
-# ── install: register the loader row ─────────────────────────────────────────
+# -- install: register the loader row -----------------------------------------
 if (-not (Test-Path -LiteralPath $patchPath)) {
     Write-Warn2 "cordis.patch.yml missing; creating $patchPath"
     New-Item -ItemType File -Force -Path $patchPath | Out-Null
@@ -171,7 +171,7 @@ if ($patch -match [regex]::Escape($RowId)) {
     Copy-Item -LiteralPath $patchPath -Destination "$patchPath.bak" -Force
     # The template shipped by dsh is a comment header followed by a bare `[]`
     # (and no trailing newline). Appending after that `[]` would produce TWO
-    # YAML root nodes, which the loader rejects — rewrite it in that case,
+    # YAML root nodes, which the loader rejects - rewrite it in that case,
     # keeping the original comment header.
     $entryText = Get-EntryText $patch
     if ($entryText -eq '' -or $entryText -eq '[]') {
