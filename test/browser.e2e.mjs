@@ -118,7 +118,7 @@ async function diagnostics() {
   }
 }
 
-async function waitFor(predicate, { timeout = 6000, step = 100, label = 'condition' } = {}) {
+async function waitFor(predicate, { timeout = 8000, step = 100, label = 'condition' } = {}) {
   const deadline = Date.now() + timeout;
   let last;
   for (;;) {

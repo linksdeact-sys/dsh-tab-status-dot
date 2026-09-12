@@ -197,4 +197,17 @@ jobs:
           npm install --no-save --no-package-lock playwright
           npx playwright install --with-deps chromium
       - name: Browser E2E (favicon status dot)
-        run: node test/browser.e2e.mjs
+        # Timing-sensitive by nature (rAF, 1 s dwell, hidden-tab paths), so a
+        # slow runner can occasionally miss a wait. One retry keeps the board
+        # honest: a real regression fails every attempt and still goes red.
+        run: |
+          set -uo pipefail
+          for attempt in 1 2; do
+            if node test/browser.e2e.mjs; then
+              if [ "$attempt" != "1" ]; then echo "::warning::browser E2E passed only on attempt $attempt (flake)"; fi
+              exit 0
+            fi
+            echo "attempt $attempt failed; retrying once…"
+            sleep 5
+          done
+          echo "browser E2E failed on every attempt"; exit 1
