@@ -1,7 +1,7 @@
 {
   "name": "@pxy/dsh-tab-status-dot",
   "description": "DeepSeek Harness web client plugin: a live browser-tab favicon status dot — light green when a session finished while you were away, light blue while a session awaits your choice, both dots when both coexist; hidden-tab aware with reload-persistent reminders.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -14,12 +14,15 @@
     "./package.json": "./package.json"
   },
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web"
     }
   },
   "scripts": {
-    "test": "node test/core.test.mjs",
+    "test": "node test/core.test.mjs && node test/bundle.test.mjs",
     "test:e2e": "node test/browser.e2e.mjs"
   },
   "keywords": [
@@ -47,6 +50,7 @@
   "license": "MIT",
   "files": [
     "lib/index.js",
-    "lib/client.js"
+    "lib/client.js",
+    "cordis.patch.yml"
   ]
 }

@@ -77,11 +77,33 @@ DeepSeek Harness Web GUI 的浏览器侧小插件：用**浏览器标签页图�
 每个 DSH 界面都是一个 *profile* 目录（`$DSH_HOME/profiles/<名称>`，例如 `~/.dsh/profiles/web`）。插件只需满足两件事：
 
 1. **包能被该 profile 解析到** —— 即位于 `<profile>/node_modules/<包名>`（pnpm 会装到这里，直接复制文件同样有效）；
-2. **该 profile 注册了对应的 loader 行** —— 在 `<profile>/cordis.patch.yml` 里加一条 `insert`，写上包名。
+2. **该 profile 注册了对应的 loader 行** —— 既可以由**包自带的 bundle 补丁层**注册（见下），也可以在 `<profile>/cordis.patch.yml` 里手写一条 `insert`。
 
-之后运行中的实例会热重载用户 patch（约 1 秒）并提供客户端 bundle，你刷新页面即可。因此下面三种方式本质等价，区别只在“包怎么进 `node_modules`”。
+之后实例会把这一行组合进插件树并提供客户端 bundle。注意：当前版本的 DSH 会**按 specifier 缓存包元数据直到进程重启**，因此**安装插件或改动 `package.json` 后必须重启 `dsh web`**，并打开它打印的（带认证的）URL；只有改 `lib/client.js` 内容时才只需刷新页面。
 
-> **安装脚本已通过真机 CI 验证**：在 `ubuntu-latest`（`sh` 即 dash）、`macos-latest`（BSD 工具链）、Alpine/BusyBox `sh`、`windows-latest`（Windows PowerShell 5.1）四种真实环境中，均按“出厂模板形态（注释头 + 裸 `[]`、无行尾换行）”安装，并用 `js-yaml` 校验生成的配置，覆盖重复安装、追加已有条目、卸载等路径。
+### 本包就是一个官方形态的插件（同时是一个 bundle）
+
+按 DSH 官方说明：**这个 harness 里每个能力都是 `cordis.yml` 里的一行插件**，而一个包可以自带**组合包补丁层（bundle patch）**来注册自己那一行：
+
+```
+dsh: {
+  bundle: { patch: "./cordis.patch.yml" },   // 本包自己的插件行写在这里
+  client: { platform: "web" }                // 双面客户端插件（./client 导出）
+}
+```
+
+于是有两条等价路线 —— **只选其一**：
+
+| 路线 | 做法 | 前提 |
+|---|---|---|
+| **A. 组合包（官方 CLI 路线）** | `dsh plugin --profile web add github:linksdeact-sys/dsh-tab-status-dot`，再把 `"@pxy/dsh-tab-status-dot"` 加进 `<profile>/package.json` 的 `dsh.profile.bundles` 列表 | 需要 pnpm（`dsh plugin` 会转发给它） |
+| **B. 脚本 / 手动复制** | 跑 `install.ps1` / `install.sh`（或直接把文件复制进 `node_modules`）+ 在 `<profile>/cordis.patch.yml` 写入 insert 行 | 什么都不需要 |
+
+> **为什么不用“动态 Cordis 插件”？** DSH 还提供通过 `cordis_*` 工具在运行时定义的插件，但官方开发指引**明确禁止**它们直接操作页面
+> （原文：*"Do not manipulate `document.body`, `window`, or hard-coded product DOM selectors."*）。
+> 标签页图标指示灯本质上必须这么做，所以它只能是**打包客户端插件**，也就是本项目的形态。
+
+> **安装脚本已通过真机 CI 验证**：在 `ubuntu-latest`（`sh` 即 dash）、`macos-latest`（BSD 工具链）、Alpine/BusyBox `sh`、`windows-latest`（Windows PowerShell 5.1）四种真实环境中，均按“出厂模板形态（注释头 + 裸 `[]`、无行尾换行）”安装，并用 `js-yaml` 校验生成的配置，覆盖重复安装、追加已有条目、卸载等路径。另有独立任务校验本包的插件约定（`test/bundle.test.mjs`），避免元数据回归再次“悄悄让插件失效”。
 
 ### 方式一：安装脚本（推荐）
 

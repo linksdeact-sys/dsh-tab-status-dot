@@ -73,11 +73,35 @@ stable across versions.
 Every DSH surface is a *profile* directory (`$DSH_HOME/profiles/<name>`, e.g. `~/.dsh/profiles/web`). A plugin only has to satisfy two things:
 
 1. **the package is resolvable from the profile** — i.e. it lives in `<profile>/node_modules/<package-name>` (pnpm installs there, but a plain copy works just as well);
-2. **the profile registers a loader row for it** — one `insert` entry in `<profile>/cordis.patch.yml` naming the package.
+2. **the profile registers a loader row for it** — either the package's own **bundle patch** (see below) or one `insert` entry in `<profile>/cordis.patch.yml` naming the package.
 
-After that the running instance hot-reloads user patches (~1 s) and serves the client bundle; you just refresh the page. The three methods below are therefore equivalent — they differ only in how the package reaches `node_modules`.
+After that the instance composes the row and serves the client bundle. Current DSH caches package metadata until the process restarts, so **restart `dsh web` after installing or changing `package.json`** and open the (authenticated) URL it prints; only `lib/client.js` content changes need just a page refresh.
 
-> **Verified installers.** CI exercises them on four real environments — `ubuntu-latest` (where `sh` is dash), `macos-latest` (BSD userland), Alpine/BusyBox `sh`, and `windows-latest` (Windows PowerShell 5.1). Each job installs into a profile shaped exactly like the shipped template (comment header + bare `[]`, no trailing newline), validates the resulting YAML with `js-yaml`, and checks the idempotent, append-to-existing-entries and uninstall paths.
+### This package is an official-form plugin (and a bundle)
+
+Per the DSH documentation, every capability is a plugin row in a `cordis.yml`, and a package can ship a
+**bundle patch layer** that adds its own row:
+
+```
+dsh: {
+  bundle: { patch: "./cordis.patch.yml" },   // this package's row lives here
+  client: { platform: "web" }                // dual-face client plugin (./client export)
+}
+```
+
+That gives two equivalent activation routes — **use exactly one**:
+
+| Route | How | Needs |
+|---|---|---|
+| **A. Bundle (official CLI route)** | `dsh plugin --profile web add github:linksdeact-sys/dsh-tab-status-dot`, then add `"@pxy/dsh-tab-status-dot"` to `dsh.profile.bundles` in `<profile>/package.json` | pnpm (the `dsh plugin` command forwards to it) |
+| **B. Scripts / manual copy** | `install.ps1` / `install.sh` (or a plain copy into `node_modules`) + the insert row in `<profile>/cordis.patch.yml` | nothing |
+
+> **Why not a dynamic Cordis plugin?** DSH also offers runtime plugins defined through the `cordis_*` tools,
+> but the official authoring guide forbids them from touching the page directly
+> (*"Do not manipulate `document.body`, `window`, or hard-coded product DOM selectors"*). A tab-favicon
+> indicator inherently needs exactly that, so it must be a packaged client bundle like this one.
+
+> **Verified installers.** CI exercises them on four real environments — `ubuntu-latest` (where `sh` is dash), `macos-latest` (BSD userland), Alpine/BusyBox `sh`, and `windows-latest` (Windows PowerShell 5.1). Each job installs into a profile shaped exactly like the shipped template (comment header + bare `[]`, no trailing newline), validates the resulting YAML with `js-yaml`, and checks the idempotent, append-to-existing-entries and uninstall paths. A separate job validates these package conventions (`test/bundle.test.mjs`), so a metadata regression cannot silently disable the plugin again.
 
 ### Method 1 — install script (recommended)
 

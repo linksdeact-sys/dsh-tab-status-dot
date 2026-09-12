@@ -1,0 +1,15 @@
+# Bundle patch layer shipped by @pxy/dsh-tab-status-dot.
+#
+# A profile activates this package by listing it in the profile manifest:
+#
+#   "dsh": { "profile": { "bundles": ["@deepseek-ai/dsh-base",
+#                                    "@deepseek-ai/dsh-web-app",
+#                                    "@pxy/dsh-tab-status-dot"] } }
+#
+# Every bundle in `dsh.profile.bundles` contributes a patch layer, applied in
+# order before the profile's own `cordis.patch.yml`. This layer inserts the
+# browser plugin row; the same row can alternatively be written into the user
+# patch layer by hand (see README) — use ONE of the two routes, not both.
+- insert:
+    - id: tab-status-dot
+      name: '@pxy/dsh-tab-status-dot'

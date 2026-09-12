@@ -5,6 +5,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.4] — 2026-02
+
+### Added
+
+- **Official bundle packaging.** The package now declares `dsh.bundle.patch` → `cordis.patch.yml`, so it can
+  be activated the documented way: install it with
+  `dsh plugin --profile web add github:linksdeact-sys/dsh-tab-status-dot` and list `@pxy/dsh-tab-status-dot`
+  in the profile's `dsh.profile.bundles` — no hand-editing of the user patch layer. The existing
+  script/manual route (insert row in `cordis.patch.yml`) still works; use one of the two, not both.
+- `test/bundle.test.mjs` (wired into `npm test`): validates the package conventions the loader depends on —
+  `exports["./client"]` exists, `dsh.client.platform === "web"`, **no** package-name `dsh.client.inject`
+  edges (the version coupling that killed the indicator), a real bundle patch that inserts the row, no bare
+  `[]` root in that patch, and a host half that exports `apply`.
+- README (中文/英文): documented the official plugin taxonomy and the two activation routes, and why this must
+  be a packaged client bundle rather than a dynamic Cordis plugin (the official authoring guide forbids
+  runtime plugins from manipulating `document`/`window`).
+
 ## [0.1.3] — 2026-02
 
 ### Fixed

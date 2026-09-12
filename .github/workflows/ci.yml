@@ -14,8 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Run plugin tests (pure core + browser-sandbox smoke)
-        run: node test/core.test.mjs
+      - name: Run plugin tests (pure core + sandbox smoke + package conventions)
+        run: npm test
 
   # The installers, exercised on REAL Linux (dash) and macOS (BSD userland)
   # against a profile shaped exactly like the one dsh ships: comment header +
