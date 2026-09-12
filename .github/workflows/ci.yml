@@ -79,7 +79,7 @@ jobs:
             console.log('patch entries after append:', d.length);
           "
 
-      - name: Uninstall restores a valid empty patch list
+      - name: Uninstall drops our row but keeps the other entries
         run: |
           set -euo pipefail
           export DSH_HOME="$PWD/.ci-home"
@@ -88,6 +88,23 @@ jobs:
           node -e "
             const fs=require('fs'), y=require('js-yaml');
             const d=y.load(fs.readFileSync(process.env.DSH_HOME+'/profiles/web/cordis.patch.yml','utf8'));
-            if(!Array.isArray(d) || d.length !== 0) throw new Error('expected an empty array after uninstall');
+            if(!Array.isArray(d) || d.length !== 1) throw new Error('expected the other entry to survive, got '+JSON.stringify(d));
+            if(JSON.stringify(d).includes('tab-status-dot')) throw new Error('our row was not removed');
             console.log('patch entries after uninstall:', d.length);
+          "
+
+      - name: Uninstalling from the shipped template restores a valid empty list
+        run: |
+          set -euo pipefail
+          export DSH_HOME="$PWD/.ci-home"
+          printf '# Your patch layer for this dsh profile, applied after every bundle layer:\n# a top-level YAML array of loader patch entries (id-targeted config\n# overrides, disables, and insert lists; `!!js` expressions allowed).\n[]' \
+            > "$DSH_HOME/profiles/web/cordis.patch.yml"
+          sh ./install.sh > /dev/null
+          sh ./install.sh --uninstall > /dev/null
+          grep -q 'Your patch layer for this dsh profile' "$DSH_HOME/profiles/web/cordis.patch.yml"
+          node -e "
+            const fs=require('fs'), y=require('js-yaml');
+            const d=y.load(fs.readFileSync(process.env.DSH_HOME+'/profiles/web/cordis.patch.yml','utf8'));
+            if(!Array.isArray(d) || d.length !== 0) throw new Error('expected an empty array after uninstall, got '+JSON.stringify(d));
+            console.log('patch entries after template uninstall:', d.length);
           "
