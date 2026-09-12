@@ -9,8 +9,28 @@ DeepSeek Harness Web GUI 的浏览器侧小插件：用**浏览器标签页图�
 
 不修改页面标题文字，指示全部放在标签图标里（那里的大小与颜色完全可控）。
 
-> **第一次用？** 看 **[新手上路（不用懂代码）](GETTING-STARTED.zh-CN.md)**（[English](GETTING-STARTED.md)）——
-> Windows / Linux / macOS 都有一步步的图文式命令，复制粘贴即可。
+## 🚀 小白安装（三步，不用懂代码）
+
+**第 1 步 · 下载**：打开[最新发布页](https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest)，拉到页面最下方 **Assets**，下载 `dsh-tab-status-dot-0.1.4.zip`（版本号更新了就下最新的那个），然后**全部解压缩**。
+
+**第 2 步 · 运行一条命令**（先进入解压出来的文件夹）：
+
+```powershell
+# Windows：在文件夹空白处右键 →「在终端中打开」，粘贴这一行后回车
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+```sh
+# Linux / macOS：在该文件夹打开终端，执行
+chmod +x install.sh && ./install.sh
+```
+
+**第 3 步 · 重启 DeepSeek Harness**：关掉它的网页窗口 → 在启动它的终端里按 **Ctrl + C** → 用原来的方式重新启动 → **打开它新打印出来的网址**。标签页图标就变成状态小圆点了。
+
+不想要了：同一条命令末尾加上 `-Uninstall`（Windows）或 `--uninstall`（Linux / macOS），然后再重启一次 Harness。
+
+> 📖 想要更啰嗦、带解释的逐步教程？看 **[新手上路](GETTING-STARTED.zh-CN.md)**（[English](GETTING-STARTED.md)）。
+> 想用官方包管理器方式（`dsh plugin … add`）？见下方[安装](#安装)章节。
 
 ![states](docs/states.svg)
 

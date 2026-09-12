@@ -8,7 +8,28 @@ A tiny browser-side plugin for the **DeepSeek Harness Web GUI** (`dsh web`) that
 
 No page-title text is modified — the indicator lives entirely in the tab icon (favicon), where size and colour are fully controllable.
 
-> **New to this?** Read the beginner-friendly **[Getting started](GETTING-STARTED.md)** ([中文版](GETTING-STARTED.zh-CN.md)) — step-by-step for Windows, Linux and macOS, no coding required.
+## 🚀 Install in 3 steps (no coding)
+
+**1. Download.** Open the [latest release](https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest) and, under **Assets**, download `dsh-tab-status-dot-0.1.4.zip` (take the newest zip if the number differs), then extract it.
+
+**2. Run one command** from inside the extracted folder:
+
+```powershell
+# Windows — right-click empty space in the folder → "Open in Terminal", then paste:
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+```sh
+# Linux / macOS — open a terminal in that folder, then:
+chmod +x install.sh && ./install.sh
+```
+
+**3. Restart DeepSeek Harness** — close its window, press **Ctrl + C** in the terminal that runs it, start it again, and open the URL it prints. The tab icon becomes the status dot.
+
+Remove it again with the same command plus `-Uninstall` (Windows) or `--uninstall` (Linux/macOS), then restart once more.
+
+> 📖 Prefer a walkthrough with explanations? **[Getting started](GETTING-STARTED.md)** ([中文版](GETTING-STARTED.zh-CN.md)).
+> Prefer the official package-manager route (`dsh plugin … add`)? See [Installation](#installation).
 
 ![states](docs/states.svg)
 
