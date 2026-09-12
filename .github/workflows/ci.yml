@@ -17,11 +17,16 @@ jobs:
       - name: Run plugin tests (pure core + browser-sandbox smoke)
         run: node test/core.test.mjs
 
-  # The Linux installer, exercised on a REAL Linux runner against a profile
-  # shaped exactly like the one dsh ships (comment header + bare `[]`, with no
-  # trailing newline) — the case that used to produce an invalid patch file.
-  installers-linux:
-    runs-on: ubuntu-latest
+  # The installers, exercised on REAL Linux (dash) and macOS (BSD userland)
+  # against a profile shaped exactly like the one dsh ships: comment header +
+  # bare `[]`, with no trailing newline — the case that used to produce an
+  # invalid patch file.
+  installers:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,9 +36,9 @@ jobs:
       - name: Shell syntax check and line endings
         run: |
           set -euo pipefail
-          sh -n install.sh                      # ubuntu's `sh` is dash
+          sh -n install.sh                      # ubuntu's sh is dash; macOS's is bash --posix
           if grep -q $'\r' install.sh; then
-            echo "install.sh contains CR characters (would break on Linux)"; exit 1
+            echo "install.sh contains CR characters (would break on Unix)"; exit 1
           fi
           chmod +x install.sh
 
@@ -108,3 +113,42 @@ jobs:
             if(!Array.isArray(d) || d.length !== 0) throw new Error('expected an empty array after uninstall, got '+JSON.stringify(d));
             console.log('patch entries after template uninstall:', d.length);
           "
+
+  # The PowerShell installer, exercised on a real Windows runner.
+  installers-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install YAML validator
+        run: npm install --no-save --no-package-lock js-yaml
+
+      - name: Install into a profile shaped like the shipped template
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $home2 = Join-Path $PWD '.ci-home'
+          New-Item -ItemType Directory -Force -Path (Join-Path $home2 'profiles\web') | Out-Null
+          $template = "# Your patch layer for this dsh profile, applied after every bundle layer:`n# a top-level YAML array of loader patch entries (id-targeted config`n# overrides, disables, and insert lists; ``!!js`` expressions allowed).`n[]"
+          [System.IO.File]::WriteAllText((Join-Path $home2 'profiles\web\cordis.patch.yml'), $template)
+          powershell -ExecutionPolicy Bypass -File .\install.ps1 -DshHome $home2
+          $dest = Join-Path $home2 'profiles\web\node_modules\@pxy\dsh-tab-status-dot'
+          if (-not (Test-Path (Join-Path $dest 'lib\client.js'))) { throw 'client.js was not installed' }
+          if (-not (Test-Path (Join-Path $dest 'package.json'))) { throw 'package.json was not installed' }
+          $env:DSH_HOME = $home2
+          node -e "const fs=require('fs'),y=require('js-yaml');const d=y.load(fs.readFileSync(process.env.DSH_HOME+'/profiles/web/cordis.patch.yml','utf8'));if(!Array.isArray(d))throw new Error('not an array');if(!JSON.stringify(d).includes('tab-status-dot'))throw new Error('row missing');console.log('patch entries after install:',d.length)"
+
+      - name: Re-running is idempotent, then uninstall restores the template
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $home2 = Join-Path $PWD '.ci-home'
+          $env:DSH_HOME = $home2
+          $out = powershell -ExecutionPolicy Bypass -File .\install.ps1 -DshHome $home2
+          if (-not ($out -match 'already registered')) { throw 'second run was not idempotent' }
+          powershell -ExecutionPolicy Bypass -File .\install.ps1 -DshHome $home2 -Uninstall
+          if (Test-Path (Join-Path $home2 'profiles\web\node_modules\@pxy\dsh-tab-status-dot')) { throw 'package directory survived uninstall' }
+          node -e "const fs=require('fs'),y=require('js-yaml');const d=y.load(fs.readFileSync(process.env.DSH_HOME+'/profiles/web/cordis.patch.yml','utf8'));if(!Array.isArray(d)||d.length!==0)throw new Error('expected an empty array after uninstall, got '+JSON.stringify(d));console.log('patch entries after uninstall:',d.length)"
