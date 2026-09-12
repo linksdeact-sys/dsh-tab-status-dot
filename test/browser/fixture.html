@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>DeepSeek Harness</title>
+</head>
+<body>
+<!--
+  Minimal stand-in for the DSH browser kernel, used by test/browser.e2e.mjs.
+
+  It provides exactly what the plugin bundle expects from the page:
+    * window.__ModuleLoader__.load({ id, factory })  — captures the bundle's registration
+    * a controllable fake `sessions` service (ObservableSnapshot: getSnapshot/subscribe)
+    * a cordis-ish ctx ({ get, effect, on })
+
+  The test drives `__dshHarness.setSnapshot(...)` to simulate conversation state
+  and reads the favicon/title to assert what the plugin rendered.
+-->
+<script>
+  window.__dshHarness = (function () {
+    let captured = null;
+    let disposer = null;
+    const listeners = [];
+    // Start in the runtime's pre-baseline state ('pending'): a real session
+    // list store is empty-but-not-ready until the first list pull lands, and
+    // the plugin deliberately does nothing (no pruning) until then.
+    const state = { snapshot: { ids: [], byId: {}, current: undefined, phase: 'pending' } };
+
+    window.__ModuleLoader__ = {
+      load(options) { captured = options; }
+    };
+
+    function notify() {
+      for (const fn of listeners.slice()) fn();
+    }
+
+    const sessions = {
+      list: {
+        getSnapshot: () => state.snapshot,
+        subscribe(fn) {
+          listeners.push(fn);
+          return () => {
+            const i = listeners.indexOf(fn);
+            if (i >= 0) listeners.splice(i, 1);
+          };
+        }
+      }
+    };
+
+    const ctx = {
+      get: (name) => (name === 'sessions' ? sessions : undefined),
+      effect(fn) { disposer = fn(); return disposer; },
+      on: () => () => {}
+    };
+
+    return {
+      /** Simulate a list-store publish; the plugin re-reads the snapshot. */
+      setSnapshot(next) { state.snapshot = next; notify(); },
+      /** Load-time registration captured? (proves the bundle executed) */
+      registered: () => captured !== null,
+      registeredId: () => (captured ? captured.id : null),
+      /** Invoke the plugin the way the DSH loader does (factory(require) → apply(ctx)). */
+      apply() {
+        const api = captured.factory((spec) => { throw new Error('unexpected require: ' + spec); });
+        api.apply(ctx);
+        return api.inject;
+      },
+      /** Run the plugin's cleanup (fiber disposal). */
+      dispose() { if (typeof disposer === 'function') disposer(); },
+      faviconHref: () => {
+        const link = document.getElementById('dsh-tab-status-dot-favicon');
+        return link ? link.href : null;
+      },
+      title: () => document.title
+    };
+  })();
+</script>
+<!-- the bundle under test (classic script, exactly as the DSH module host serves it) -->
+<script src="../../lib/client.js"></script>
+</body>
+</html>

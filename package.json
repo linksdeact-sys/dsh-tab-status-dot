@@ -22,7 +22,8 @@
     }
   },
   "scripts": {
-    "test": "node test/core.test.mjs"
+    "test": "node test/core.test.mjs",
+    "test:e2e": "node test/browser.e2e.mjs"
   },
   "keywords": [
     "deepseek",

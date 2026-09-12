@@ -7,6 +7,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- **Real-browser E2E test** (`test/browser.e2e.mjs` + `test/browser/fixture.html`, run by the new
+  `browser-e2e` CI job on Chromium). The fixture stands in for the DSH kernel — it captures the bundle's
+  `__ModuleLoader__` registration and exposes a controllable fake `sessions` service — and the assertions read
+  the favicon the browser actually resolves:
+  neutral → light green (finished while you were away) → cleared on open; green for a hidden-tab finish of the
+  **open** session plus its ~1 s read-dwell auto-clear; light blue while a choice waits and its clearing on
+  answer; two dots when both conditions hold; the reminder restored after a page reload; full cleanup on
+  disposal; and no page/console errors. `npm run test:e2e`.
 - **BusyBox `sh` (Alpine Linux) coverage** for the shell installer: a CI job runs
   `.github/ci/alpine-installer-check.sh` inside an `alpine:3.20` container and checks install, idempotent
   re-run, append-to-existing-entries, uninstall-keeps-others and uninstall-restores-template, validating the

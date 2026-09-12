@@ -149,20 +149,40 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall   # Windows
 ├── docs/
 │   └── states.svg        # 状态示意图
 └── test/
-    └── core.test.mjs     # 纯逻辑 + 浏览器沙箱冒烟测试（node:vm，无 CJS 全局）
+    ├── core.test.mjs         # 纯逻辑 + node:vm 沙箱冒烟测试（无 CJS 全局）
+    └── browser.e2e.mjs       # 真浏览器 E2E（Playwright）+ browser/fixture.html 内核替身
 ```
 
-跑测试：
+### 单元测试（零依赖）
 
 ```sh
-node test/core.test.mjs
+node test/core.test.mjs        # 或：npm test
 ```
 
-测试用 `node:vm` 沙箱执行 `client.js`，只提供浏览器类全局（`window`/`document`/`localStorage`）——
+用 `node:vm` 沙箱执行 `client.js`，只提供浏览器类全局（`window`/`document`/`localStorage`）——
 与 DSH module loader 的真实执行环境一致，因此“缺 CommonJS 包装（exports is not defined）”之类
 的加载期崩溃在进入真实页面前就会被抓住。
 
-改 `lib/client.js` 后刷新页面即可验证（bundle 以 `no-cache` 提供）。
+### 真浏览器 E2E（Playwright）
+
+```sh
+# 本地：复用已安装的 Chrome/Edge（不下载浏览器）
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-save --no-package-lock playwright
+PW_CHANNEL=msedge node test/browser.e2e.mjs
+
+# 或用 Playwright 自带的 Chromium：
+npm install --no-save --no-package-lock playwright
+npx playwright install --with-deps chromium
+node test/browser.e2e.mjs      # 或：npm run test:e2e
+```
+
+`test/browser/fixture.html` 是 DSH 浏览器内核的替身：捕获 bundle 的 `__ModuleLoader__` 注册，
+并提供一个可编程的假 `sessions` 服务。测试会驱动真实会话状态，并断言**浏览器实际解析出的 favicon**：
+中性 → 淡绿（你不在时跑完）→ 点开后清除；**隐藏标签页里当前会话跑完也亮绿**，以及回到页面约 1 秒的
+自动已读；等待选择时浅蓝、作答后清除；两种情况并存显示双点；刷新后提醒仍在；卸载时完整复原。
+任何 page error / console error 都会让测试失败。
+
+改 `lib/client.js` 后刷新页面即可实时验证（bundle 以 `no-cache` 提供）。
 
 ## 说明与限制
 

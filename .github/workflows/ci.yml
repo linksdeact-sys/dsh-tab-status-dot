@@ -179,3 +179,22 @@ jobs:
           set -euo pipefail
           docker run --rm -v "$PWD:/w" -w /w alpine:3.20 \
             sh /w/.github/ci/alpine-installer-check.sh
+
+  # The plugin's rendering behaviour, in a REAL browser: a fixture stands in for
+  # the DSH kernel, and the assertions read the favicon the browser actually
+  # resolves (neutral / light green / light blue / two dots) plus the untouched
+  # page title.
+  browser-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright and Chromium
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Browser E2E (favicon status dot)
+        run: node test/browser.e2e.mjs

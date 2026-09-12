@@ -142,18 +142,41 @@ See [`INSTALL.md`](INSTALL.md) for the original step-by-step notes and operation
 │   ├── index.js          # host half: empty apply (pure client plugin convention)
 │   └── client.js         # browser bundle: module-loader factory + state machine + renderer
 └── test/
-    └── core.test.mjs     # pure-logic + browser-sandbox smoke tests (node:vm, no CJS globals)
+    ├── core.test.mjs         # pure-logic cases + node:vm sandbox smoke test (no CJS globals)
+    └── browser.e2e.mjs       # real-browser E2E (Playwright) + browser/fixture.html kernel stub
 ```
 
-Run the tests:
+### Unit tests (no dependencies)
 
 ```sh
-node test/core.test.mjs
+node test/core.test.mjs        # or: npm test
 ```
 
-The test harness evaluates `client.js` inside a `node:vm` sandbox that provides only browser-ish globals (`window`, `document`, `localStorage`) — the same conditions the DSH module loader creates — so a missing CommonJS-style wrapper (`exports is not defined`) or any load-time crash is caught before it ever reaches a real page.
+The harness evaluates `client.js` inside a `node:vm` sandbox that provides only browser-ish globals (`window`, `document`, `localStorage`) — the same conditions the DSH module loader creates — so a missing CommonJS-style wrapper (`exports is not defined`) or any load-time crash is caught before it ever reaches a real page.
 
-Edit `lib/client.js` → refresh the page to test (the bundle is served `no-cache`).
+### Browser E2E (Playwright)
+
+```sh
+# Locally, reusing an installed Chrome/Edge (no browser download):
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-save --no-package-lock playwright
+PW_CHANNEL=msedge node test/browser.e2e.mjs
+
+# Or with Playwright's own Chromium:
+npm install --no-save --no-package-lock playwright
+npx playwright install --with-deps chromium
+node test/browser.e2e.mjs      # or: npm run test:e2e
+```
+
+`test/browser/fixture.html` stands in for the DSH kernel: it captures the bundle's
+`__ModuleLoader__` registration and exposes a controllable fake `sessions` service.
+The test then drives real conversation state and asserts the favicon the browser
+resolves: neutral → light green (finished while you were away) → cleared on open;
+green for a hidden-tab finish of the *open* session plus its ~1 s read-dwell
+auto-clear; light blue while a choice waits and its clearing on answer; two dots
+when both hold; the reminder restored after a page reload; and full cleanup on
+disposal. It also fails on any page or console error.
+
+Edit `lib/client.js` → refresh the page to test live (the bundle is served `no-cache`).
 
 ## Notes & limitations
 
