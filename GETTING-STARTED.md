@@ -47,9 +47,9 @@ cd ~/Downloads
 #   Fedora:        sudo dnf install -y unzip
 #   Arch:          sudo pacman -S unzip
 curl -L -o dsh-tab-status-dot.zip \
-  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.1.zip
+  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.2.zip
 unzip -o dsh-tab-status-dot.zip
-cd dsh-tab-status-dot-0.1.1
+cd dsh-tab-status-dot-0.1.2
 ```
 
 **Option B — clone with git**
@@ -90,7 +90,7 @@ Back in the Harness page press **Ctrl + F5** (Firefox: **Ctrl + Shift + R**). Th
 ## Windows
 
 1. Open <https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest> and download
-   `dsh-tab-status-dot-0.1.1.zip` from **Assets**.
+   `dsh-tab-status-dot-0.1.2.zip` from **Assets**.
 2. Right-click the zip → **Extract All**.
 3. In the extracted folder, right-click empty space → **Open in Terminal** (Windows 11) or
    **Open PowerShell window here** (Shift + right-click on Windows 10).
@@ -111,9 +111,9 @@ Uninstall: run the same command with ` -Uninstall` appended.
 ```bash
 cd ~/Downloads
 curl -L -o dsh-tab-status-dot.zip \
-  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.1.zip
+  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.2.zip
 unzip -o dsh-tab-status-dot.zip
-cd dsh-tab-status-dot-0.1.1
+cd dsh-tab-status-dot-0.1.2
 chmod +x install.sh
 ./install.sh
 ```

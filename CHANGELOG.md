@@ -25,7 +25,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   dash) against the exact shipped profile template, validates the resulting YAML with `js-yaml`, and checks the
   idempotent, append and uninstall paths.
 
-## [0.1.1] — 2026-02
+## [0.1.2] — 2026-02
 
 ### Added
 

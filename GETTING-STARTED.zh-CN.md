@@ -48,9 +48,9 @@ cd ~/Downloads
 #   Fedora:        sudo dnf install -y unzip
 #   Arch:          sudo pacman -S unzip
 curl -L -o dsh-tab-status-dot.zip \
-  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.1.zip
+  https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.2.zip
 unzip -o dsh-tab-status-dot.zip
-cd dsh-tab-status-dot-0.1.1
+cd dsh-tab-status-dot-0.1.2
 ```
 
 **办法 B：用 git 克隆（电脑上已装 git 的话更省事）**
@@ -97,7 +97,7 @@ chmod +x install.sh      # 给它“可执行”权限，只需做一次
 ## 四、Windows 安装
 
 1. 打开 <https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest>，
-   在页面最下方 **Assets** 里下载 `dsh-tab-status-dot-0.1.1.zip`。
+   在页面最下方 **Assets** 里下载 `dsh-tab-status-dot-0.1.2.zip`。
 2. 右键压缩包 → **全部解压缩**。
 3. 进入解压出来的文件夹，在**空白处**右键：
    - Windows 11：选「**在终端中打开**」；
@@ -122,9 +122,9 @@ chmod +x install.sh      # 给它“可执行”权限，只需做一次
    ```bash
    cd ~/Downloads
    curl -L -o dsh-tab-status-dot.zip \
-     https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.1.zip
+     https://github.com/linksdeact-sys/dsh-tab-status-dot/releases/latest/download/dsh-tab-status-dot-0.1.2.zip
    unzip -o dsh-tab-status-dot.zip
-   cd dsh-tab-status-dot-0.1.1
+   cd dsh-tab-status-dot-0.1.2
    chmod +x install.sh
    ./install.sh
    ```
